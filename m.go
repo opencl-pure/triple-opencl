@@ -1,2 +1,1 @@
-package triple-opencl
-
+package main
