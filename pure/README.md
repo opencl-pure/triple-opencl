@@ -9,14 +9,15 @@ thank to both of them!
 this is really low level wrapper I recommend to start with https://github.com/Zyko0/go-opencl, which still is low level, but add GO errors wrapper or
 my package "high", but the package "high" is high level and not all functions are implemented.
 # example
+
 ```go
 package main
 
 import (
-	"github.com/opencl-pure/triple-opencl/pure"
-	"github.com/opencl-pure/triple-opencl/constants"
-	"log"
 	"errors"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
+	"log"
 )
 
 func main() {

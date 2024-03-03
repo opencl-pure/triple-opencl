@@ -1,6 +1,6 @@
 package high
 
-import "opencl-pure/opencl/pure"
+import "github.com/opencl-pure/triple-opencl/pure"
 
 type Event struct {
 	event pure.Event

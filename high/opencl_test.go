@@ -6,7 +6,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	_ "image/png"
-	"opencl-pure/opencl/constants"
+	"github.com/opencl-pure/triple-opencl/constants"
 	"os"
 	"testing"
 )

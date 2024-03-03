@@ -3,9 +3,9 @@ package high
 import "C"
 import (
 	"errors"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"log"
-	"opencl-pure/opencl/constants"
-	"opencl-pure/opencl/pure"
 	"unsafe"
 )
 

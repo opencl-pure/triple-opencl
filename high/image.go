@@ -2,10 +2,10 @@ package high
 
 import (
 	"errors"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"image"
 	"log"
-	"opencl-pure/opencl/constants"
-	"opencl-pure/opencl/pure"
 	"unsafe"
 )
 
