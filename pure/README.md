@@ -13,8 +13,8 @@ my package "high", but the package "high" is high level and not all functions ar
 package main
 
 import (
-	"github.com/opencl-pure/opencl/pure"
-	"github.com/opencl-pure/opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
+	"github.com/opencl-pure/triple-opencl/constants"
 	"log"
 	"errors"
 )
