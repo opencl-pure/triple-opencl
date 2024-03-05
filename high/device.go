@@ -106,7 +106,7 @@ func (d *Device) AddProgram(source string) (*Program, error) {
 	if err != nil {
 		panic(err)
 	}
-	ret = pure.BuildProgram(p, 1, d.id, nil, nil, nil)
+	ret = pure.BuildProgram(p, 1, d.id, "", nil, nil)
 	if ret != constants.CL_SUCCESS {
 		if ret == constants.CL_BUILD_PROGRAM_FAILURE {
 			var n pure.Size
