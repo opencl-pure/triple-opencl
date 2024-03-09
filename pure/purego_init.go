@@ -1,92 +1,74 @@
 package pure
 
-import (
-	"errors"
-	"github.com/ebitengine/purego"
-)
-
-func Init(version int) (e error) {
+func Init(version int) error {
 	handle, err := loadLibrary()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		reco := recover()
-		if reco == nil {
-			return
-		}
-		err, ok := recover().(error)
-		if ok {
-			e = err
-			return
-		}
-		e = errors.New("unknown error")
-	}()
 	// Platform
-	purego.RegisterLibFunc(&GetPlatformIDs, handle, "clGetPlatformIDs")
-	purego.RegisterLibFunc(&GetPlatformInfo, handle, "clGetPlatformInfo")
+	err = registerLibFuncWithoutPanic(&GetPlatformIDs, handle, "clGetPlatformIDs", nil)
+	err = registerLibFuncWithoutPanic(&GetPlatformInfo, handle, "clGetPlatformInfo", err)
 	// Device
-	purego.RegisterLibFunc(&GetDeviceIDs, handle, "clGetDeviceIDs")
-	purego.RegisterLibFunc(&GetDeviceInfo, handle, "clGetDeviceInfo")
-	purego.RegisterLibFunc(&ReleaseDevice, handle, "clReleaseDevice")
+	err = registerLibFuncWithoutPanic(&GetDeviceIDs, handle, "clGetDeviceIDs", err)
+	err = registerLibFuncWithoutPanic(&GetDeviceInfo, handle, "clGetDeviceInfo", err)
+	err = registerLibFuncWithoutPanic(&ReleaseDevice, handle, "clReleaseDevice", err)
 	// Event
-	purego.RegisterLibFunc(&ReleaseEvent, handle, "clReleaseEvent")
-	purego.RegisterLibFunc(&WaitForEvents, handle, "clWaitForEvents")
+	err = registerLibFuncWithoutPanic(&ReleaseEvent, handle, "clReleaseEvent", err)
+	err = registerLibFuncWithoutPanic(&WaitForEvents, handle, "clWaitForEvents", err)
 	// Context
-	purego.RegisterLibFunc(&CreateContext, handle, "clCreateContext")
-	purego.RegisterLibFunc(&ReleaseContext, handle, "clReleaseContext")
-	purego.RegisterLibFunc(&CreateProgramWithSource, handle, "clCreateProgramWithSource")
-	purego.RegisterLibFunc(&CreateBuffer, handle, "clCreateBuffer")
-	purego.RegisterLibFunc(&CreateImage2D, handle, "clCreateImage2D")
+	err = registerLibFuncWithoutPanic(&CreateContext, handle, "clCreateContext", err)
+	err = registerLibFuncWithoutPanic(&ReleaseContext, handle, "clReleaseContext", err)
+	err = registerLibFuncWithoutPanic(&CreateProgramWithSource, handle, "clCreateProgramWithSource", err)
+	err = registerLibFuncWithoutPanic(&CreateBuffer, handle, "clCreateBuffer", err)
+	err = registerLibFuncWithoutPanic(&CreateImage2D, handle, "clCreateImage2D", err)
 	// Command queue
 	if version >= 2 {
-		purego.RegisterLibFunc(&CreateCommandQueueWithProperties, handle, "clCreateCommandQueueWithProperties")
+		err = registerLibFuncWithoutPanic(&CreateCommandQueueWithProperties, handle, "clCreateCommandQueueWithProperties", err)
 	} else {
-		purego.RegisterLibFunc(&CreateCommandQueue, handle, "clCreateCommandQueue")
+		err = registerLibFuncWithoutPanic(&CreateCommandQueue, handle, "clCreateCommandQueue", err)
 	}
-	purego.RegisterLibFunc(&EnqueueBarrier, handle, "clEnqueueBarrier")
-	purego.RegisterLibFunc(&EnqueueNDRangeKernel, handle, "clEnqueueNDRangeKernel")
-	purego.RegisterLibFunc(&EnqueueReadBuffer, handle, "clEnqueueReadBuffer")
+	err = registerLibFuncWithoutPanic(&EnqueueBarrier, handle, "clEnqueueBarrier", err)
+	err = registerLibFuncWithoutPanic(&EnqueueNDRangeKernel, handle, "clEnqueueNDRangeKernel", err)
+	err = registerLibFuncWithoutPanic(&EnqueueReadBuffer, handle, "clEnqueueReadBuffer", err)
 	//TODO: purego: broken too many arguments
-	//purego.RegisterLibFunc(&EnqueueReadImage, handle, "clEnqueueReadImage")
+	err = registerLibFuncWithoutPanic(&EnqueueReadImage, handle, "clEnqueueReadImage", err)
+	err = registerLibFuncWithoutPanic(&EnqueueWriteImage, handle, "clEnqueueWriteImage", err)
 
-	//purego.RegisterLibFunc(&EnqueueReadImage, handle, "clEnqueueWriteImage")
-
-	purego.RegisterLibFunc(&EnqueueWriteBuffer, handle, "clEnqueueWriteBuffer")
+	err = registerLibFuncWithoutPanic(&EnqueueWriteBuffer, handle, "clEnqueueWriteBuffer", err)
 	//TODO: purego: broken too many arguments
-	//purego.RegisterLibFunc(&EnqueueMapImage, handle, "clEnqueueMapImage")
-	//purego.RegisterLibFunc(&EnqueueMapBuffer, handle, "clEnqueueMapBuffer")
+	err = registerLibFuncWithoutPanic(&EnqueueMapImage, handle, "clEnqueueMapImage", err)
+	err = registerLibFuncWithoutPanic(&EnqueueMapBuffer, handle, "clEnqueueMapBuffer", err)
 
-	purego.RegisterLibFunc(&EnqueueUnmapMemObject, handle, "clEnqueueUnmapMemObject")
-	purego.RegisterLibFunc(&FinishCommandQueue, handle, "clFinish")
-	purego.RegisterLibFunc(&FlushCommandQueue, handle, "clFlush")
-	purego.RegisterLibFunc(&ReleaseCommandQueue, handle, "clReleaseCommandQueue")
+	err = registerLibFuncWithoutPanic(&EnqueueUnmapMemObject, handle, "clEnqueueUnmapMemObject", err)
+	err = registerLibFuncWithoutPanic(&FinishCommandQueue, handle, "clFinish", err)
+	err = registerLibFuncWithoutPanic(&FlushCommandQueue, handle, "clFlush", err)
+	err = registerLibFuncWithoutPanic(&ReleaseCommandQueue, handle, "clReleaseCommandQueue", err)
 	// Program
-	purego.RegisterLibFunc(&BuildProgram, handle, "clBuildProgram")
-	purego.RegisterLibFunc(&GetProgramBuildInfo, handle, "clGetProgramBuildInfo")
-	purego.RegisterLibFunc(&GetProgramInfo, handle, "clGetProgramInfo")
-	purego.RegisterLibFunc(&CreateKernel, handle, "clCreateKernel")
-	purego.RegisterLibFunc(&ReleaseProgram, handle, "clReleaseProgram")
+	err = registerLibFuncWithoutPanic(&BuildProgram, handle, "clBuildProgram", err)
+	err = registerLibFuncWithoutPanic(&GetProgramBuildInfo, handle, "clGetProgramBuildInfo", err)
+	err = registerLibFuncWithoutPanic(&GetProgramInfo, handle, "clGetProgramInfo", err)
+	err = registerLibFuncWithoutPanic(&CreateKernel, handle, "clCreateKernel", err)
+	err = registerLibFuncWithoutPanic(&ReleaseProgram, handle, "clReleaseProgram", err)
 	// Kernel
-	purego.RegisterLibFunc(&SetKernelArg, handle, "clSetKernelArg")
-	purego.RegisterLibFunc(&ReleaseKernel, handle, "clReleaseKernel")
+	err = registerLibFuncWithoutPanic(&SetKernelArg, handle, "clSetKernelArg", err)
+	err = registerLibFuncWithoutPanic(&ReleaseKernel, handle, "clReleaseKernel", err)
 	// Buffer
-	purego.RegisterLibFunc(&GetMemObjectInfo, handle, "clGetMemObjectInfo")
-	purego.RegisterLibFunc(&ReleaseMemObject, handle, "clReleaseMemObject")
-
+	err = registerLibFuncWithoutPanic(&GetMemObjectInfo, handle, "clGetMemObjectInfo", err)
+	err = registerLibFuncWithoutPanic(&ReleaseMemObject, handle, "clReleaseMemObject", err)
 	return nil
 }
+
 func InitializeGLSharing() error {
 	handle, err := loadLibrary()
 	if err != nil {
 		return err
 	}
 	// GL
-	purego.RegisterLibFunc(&CreateFromGLTexture, handle, "clCreateFromGLTexture")
-	purego.RegisterLibFunc(&EnqueueAcquireGLObjects, handle, "clEnqueueAcquireGLObjects")
-	purego.RegisterLibFunc(&EnqueueReleaseGLObjects, handle, "clEnqueueReleaseGLObjects")
-	purego.RegisterLibFunc(&GetGLObjectInfo, handle, "clGetGLObjectInfo")
-	purego.RegisterLibFunc(&GetGLTextureInfo, handle, "clGetGLTextureInfo")
+	err = registerLibFuncWithoutPanic(&CreateFromGLTexture, handle, "clCreateFromGLTexture", err)
+	err = registerLibFuncWithoutPanic(&EnqueueAcquireGLObjects, handle, "clEnqueueAcquireGLObjects", err)
+	err = registerLibFuncWithoutPanic(&EnqueueReleaseGLObjects, handle, "clEnqueueReleaseGLObjects", err)
+	err = registerLibFuncWithoutPanic(&GetGLObjectInfo, handle, "clGetGLObjectInfo", err)
+	err = registerLibFuncWithoutPanic(&GetGLTextureInfo, handle, "clGetGLTextureInfo", err)
 
-	return nil
+	return err
 }

@@ -61,4 +61,43 @@ type (
 	GLUint          uint32
 	CLGLObjectType  uint32
 	CLGLTextureInfo uint32
+
+	// untested and unintergrateed
+	PipeProperties         uint32
+	KernelWorkGroupInfo    uint32
+	EventInfo              uint32
+	EventCommandExecStatus uint32
+	ImageInfo              uint32
+	DeviceAffinityDomain   uint64
+	ContextProperties      struct {
+		Platform        Platform
+		InteropUserSync bool
+	}
+	DevicePartitionProperty struct {
+		Type  uint32
+		Flags uint32
+	}
+	DevicePartition struct {
+		Properties     []DevicePartitionProperty
+		AffinityDomain DeviceAffinityDomain
+	}
+	Sampler       uint
+	MemObjectType uint32
+	MapPointer    unsafe.Pointer
+	BufferRect    struct {
+		Origin [3]Size
+		Region [3]Size
+	}
+	ImageDesc struct {
+		Type        MemObjectType
+		Width       Size
+		Height      Size
+		Depth       Size
+		ArraySize   Size
+		RowPitch    Size
+		SlisePitch  Size
+		Buffer      Buffer
+		NumMipLevel uint
+		NumSamples  uint
+	}
 )
