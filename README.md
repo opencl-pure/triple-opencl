@@ -1,6 +1,7 @@
 # opencl
-provide 3 packages: 
+provide 4 sub-packages: 
 - pure, midle and  high, theese packages are named according level of abstaction, which provide
+- constants rewrite all constants to GO by script
 # still in develop !!!
 this is still in develop, I translate CGO to [purego](https://github.com/ebitengine/purego), inspirate by low level wrapper for OpenCL in C (https://github.com/krrishnarraj/libopencl-stub), every helps, corrects are welcome ...
 # pure
