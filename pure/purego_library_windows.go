@@ -12,8 +12,6 @@ func loadLibrary() (uintptr, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	/* untested
 	// purego unsupported functions
 	dll := syscall.DLL{
 		Name:   "opencl.dll",
@@ -85,6 +83,6 @@ func loadLibrary() (uintptr, error) {
 
 		return r1
 	}
- */
+
 	return uintptr(handle), err
 }

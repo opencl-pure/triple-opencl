@@ -1,6 +1,8 @@
 package pure
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 type ImageFormat struct {
 	ChannelOrder ImageChannelOrder
@@ -101,3 +103,24 @@ type (
 		NumSamples  uint
 	}
 )
+
+func NewKernelArg[T any](arg *T) KernelArg {
+	return KernelArg{
+		ptr:  unsafe.Pointer(arg),
+		size: Size(unsafe.Sizeof(*arg)),
+	}
+}
+
+func (k Kernel) SetArg(index uint, arg KernelArg) error {
+	if SetKernelArg == nil {
+		return Uninitialized("SetKernelArg")
+	}
+	return StatusToErr(SetKernelArg(k, uint32(index), arg.size, arg.ptr)) //TODO uint or uint32
+}
+
+func (k Kernel) Release() error {
+	if ReleaseKernel == nil {
+		return Uninitialized("ReleaseKernel")
+	}
+	return StatusToErr(ReleaseKernel(k))
+}

@@ -16,6 +16,10 @@ func StatusToErr(code Status) error {
 	return errors.New(fmt.Sprintf("cl: error %d", int32(code)))
 }
 
+func Uninitialized(name string) error {
+	return errors.New(name + " function is uninitialized, it ca not call shared, it must be initialized")
+}
+
 // Common OpenCl errors
 const (
 	ErrDeviceNotFound                     = "cl: Device Not Found"
