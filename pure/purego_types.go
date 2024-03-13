@@ -71,10 +71,17 @@ type (
 	EventCommandExecStatus uint32
 	ImageInfo              uint32
 	DeviceAffinityDomain   uint64
+	ContextProperty        uint
 	ContextProperties      struct {
-		Platform        Platform
-		InteropUserSync bool
+		Platform *Platform
+		// Interop
+		InteropUserSync *bool
+		// OpenGL
+		GLContextKHR *uint
+		// Windows
+		WGL_HDC_KHR *uint
 	}
+
 	DevicePartitionProperty struct {
 		Type  uint32
 		Flags uint32
