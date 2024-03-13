@@ -1,20 +1,17 @@
 package midle
 
 import (
-	"errors"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"opencl-pure/opencl/pure"
 	"strings"
 	"unsafe"
 )
 
-type Program uint
+type Program struct {
+	P pure.Program
+}
 
 type programBuildInfo uint32
-
-const (
-	programBuildStatus  programBuildInfo = 0x1181
-	programBuildOptions programBuildInfo = 0x1182
-	programBuildLog     programBuildInfo = 0x1183
-)
 
 type Version string
 
@@ -83,51 +80,55 @@ func (po *ProgramBuildOptions) String() string {
 	return sb.String()
 }
 
-func (p Program) Build(device Device, opts *ProgramBuildOptions) (string, error) {
+func (p *Program) Build(device *Device, opts *ProgramBuildOptions) (string, error) {
 	var err error
-
-	st := buildProgram(
-		p, 1, []Device{device}, opts.String(), nil, nil,
+	if pure.BuildProgram == nil {
+		return "", pure.Uninitialized("BuildProgram")
+	}
+	if pure.GetProgramBuildInfo == nil {
+		return "", pure.Uninitialized("GetProgramBuildInfo")
+	}
+	st := pure.BuildProgram(
+		p.P, 1, []pure.Device{device.D}, []byte(opts.String()), nil, nil,
 	)
-	if st != CL_SUCCESS {
-		err = errors.New("oops at build program")
+	if st != constants.CL_SUCCESS {
+		err = pure.StatusToErr(st)
 	}
 
-	var logsSize clSize
-	st = getProgramBuildInfo(
-		p, device, programBuildLog, 0, nil, &logsSize,
+	var logsSize pure.Size
+	st = pure.GetProgramBuildInfo(
+		p.P, device.D, constants.CL_PROGRAM_BUILD_LOG, 0, nil, &logsSize,
 	)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 1st get program build info")
+	if st != constants.CL_SUCCESS {
+		return "", pure.StatusToErr(st)
 	}
 
 	var logs = make([]byte, logsSize)
-	st = getProgramBuildInfo(
-		p, device, programBuildLog, logsSize, unsafe.Pointer(&logs[0]), nil,
+	st = pure.GetProgramBuildInfo(
+		p.P, device.D, constants.CL_PROGRAM_BUILD_LOG, logsSize, unsafe.Pointer(&logs[0]), nil,
 	)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 2nd get program build info")
+	if st != constants.CL_SUCCESS {
+		return "", pure.StatusToErr(st)
 	}
 
 	return string(logs), err
 }
 
-func (p Program) CreateKernel(name string) (Kernel, error) {
-	var st clStatus
-
-	kernel := createKernel(p, name, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create kernel")
+func (p *Program) CreateKernel(name string) (*Kernel, error) {
+	var st pure.Status
+	if pure.CreateKernel == nil {
+		return nil, pure.Uninitialized("CreateKernel")
 	}
-
-	return kernel, nil
+	kernel := pure.CreateKernel(p.P, name, &st)
+	if st != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(st)
+	}
+	return &Kernel{K: kernel}, nil
 }
 
-func (p Program) Release() error {
-	st := releaseProgram(p)
-	if st != CL_SUCCESS {
-		return errors.New("oops at release program")
+func (p *Program) Release() error {
+	if pure.ReleaseProgram == nil {
+		return pure.Uninitialized("ReleaseProgram")
 	}
-
-	return nil
+	return pure.StatusToErr(pure.ReleaseProgram(p.P))
 }

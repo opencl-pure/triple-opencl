@@ -1,4 +1,4 @@
-# midle
+# go-opencl
 
 Very minimalist OpenCL bindings in pure go, doesn't need CGo thanks to https://github.com/ebitengine/purego.
 

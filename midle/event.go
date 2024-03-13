@@ -1,3 +1,5 @@
 package midle
 
-type Event uint
+import "opencl-pure/opencl/pure"
+
+type Event pure.Event

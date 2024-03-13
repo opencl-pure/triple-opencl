@@ -1,55 +1,35 @@
 package midle
 
 import (
-	"errors"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"opencl-pure/opencl/pure"
 	"strings"
 )
 
 type DeviceType uint32
 
-const (
-	DeviceTypeDefault     DeviceType = 1 << 0
-	DeviceTypeCPU         DeviceType = 1 << 1
-	DeviceTypeGPU         DeviceType = 1 << 2
-	DeviceTypeAccelerator DeviceType = 1 << 3
-	DeviceTypeCustom      DeviceType = 1 << 4
-	DeviceTypeAll         DeviceType = 0xFFFFFFFF
-)
-
-type Device uint
+type Device struct {
+	D pure.Device
+}
 
 type deviceInfo uint32
 
-const (
-	deviceInfoType              deviceInfo = 0x1000
-	deviceInfoAddressBits       deviceInfo = 0x100D
-	deviceInfoAvailable         deviceInfo = 0x1027
-	deviceInfoCompilerAvailable deviceInfo = 0x1028
-	deviceInfoBuiltInKernels    deviceInfo = 0x103F
-	deviceInfoVendor            deviceInfo = 0x102C
-	deviceInfoDriverVersion     deviceInfo = 0x102D
-
-	deviceInfoExtensions deviceInfo = 0x1030
-)
-
-func (d Device) getInfo(name deviceInfo) (string, error) {
-	size := clSize(0)
-	st := getDeviceInfo(d, name, clSize(0), nil, &size)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 1st get device info")
+func (d *Device) getInfo(name pure.DeviceInfo) (string, error) {
+	size := pure.Size(0)
+	st := pure.GetDeviceInfo(d.D, name, pure.Size(0), nil, &size)
+	if st != constants.CL_SUCCESS {
+		return "", pure.StatusToErr(st)
 	}
-
 	info := make([]byte, size)
-	st = getDeviceInfo(d, name, size, info, nil)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 2nd get device info")
+	st = pure.GetDeviceInfo(d.D, name, size, info, nil)
+	if st != constants.CL_SUCCESS {
+		return "", pure.StatusToErr(st)
 	}
-
 	return string(info), nil
 }
 
-func (d Device) GetExtensions() ([]Extension, error) {
-	extensions, err := d.getInfo(deviceInfoExtensions)
+func (d *Device) GetExtensions() ([]pure.Extension, error) {
+	extensions, err := d.getInfo(constants.CL_DEVICE_EXTENSIONS)
 	if err != nil {
 		return nil, err
 	}

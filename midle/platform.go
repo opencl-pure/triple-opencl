@@ -1,90 +1,90 @@
 package midle
 
 import (
-	"errors"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"opencl-pure/opencl/pure"
 	"strings"
 )
 
-type Platform uint
+type Platform struct {
+	P pure.Platform
+}
 
 func GetPlatforms() ([]Platform, error) {
 	numPlatforms := uint32(0)
-	st := getPlatformIDs(0, nil, &numPlatforms)
-	if st != CL_SUCCESS {
-		return nil, errors.New("oops at get platform ids")
+	if pure.GetPlatformIDs == nil {
+		return nil, pure.Uninitialized("GetPlatformIDs")
+	}
+	st := pure.GetPlatformIDs(0, nil, &numPlatforms)
+	if st != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(st)
 	}
 
-	platformIDs := make([]Platform, numPlatforms)
-	st = getPlatformIDs(numPlatforms, platformIDs, nil)
-	if st != CL_SUCCESS {
-		return nil, errors.New("oops at get platform ids")
+	platformIDs := make([]pure.Platform, numPlatforms)
+	st = pure.GetPlatformIDs(numPlatforms, platformIDs, nil)
+	if st != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(st)
 	}
-
-	return platformIDs, nil
+	res := make([]Platform, numPlatforms)
+	for i := uint32(0); i < numPlatforms; i++ {
+		res[i] = Platform{P: platformIDs[i]}
+	}
+	return res, nil
 }
 
-type platformInfo uint
-
-const (
-	platformInfoProfile    platformInfo = 0x0900
-	platformInfoVersion    platformInfo = 0x0901
-	platformInfoName       platformInfo = 0x0902
-	platformInfoVendor     platformInfo = 0x0903
-	platformInfoExtensions platformInfo = 0x0904
-)
+type platformInfo pure.PlatformInfo
 
 func (p Platform) getInfo(name platformInfo) (string, error) {
-	size := clSize(0)
-	st := getPlatformInfo(p, name, clSize(0), nil, &size)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 1st get platform info")
+	size := pure.Size(0)
+	st := pure.GetPlatformInfo(p.P, pure.PlatformInfo(name), pure.Size(0), nil, &size)
+	if st != constants.CL_SUCCESS {
+		return "", pure.StatusToErr(st)
 	}
 
 	info := make([]byte, size)
-	st = getPlatformInfo(p, name, size, info, nil)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 2nd get platform info")
+	st = pure.GetPlatformInfo(p.P, pure.PlatformInfo(name), size, info, nil)
+	if st != constants.CL_SUCCESS {
+		return "", pure.StatusToErr(st)
 	}
-
 	return string(info), nil
 }
-
-func (p Platform) GetProfile() (string, error) {
-	return p.getInfo(platformInfoProfile)
+func (p *Platform) GetProfile() (string, error) {
+	return p.getInfo(constants.CL_PLATFORM_PROFILE)
 }
-
-func (p Platform) GetVersion() (string, error) {
-	return p.getInfo(platformInfoVersion)
+func (p *Platform) GetVersion() (string, error) {
+	return p.getInfo(constants.CL_PLATFORM_VERSION)
 }
-
-func (p Platform) GetName() (string, error) {
-	return p.getInfo(platformInfoName)
+func (p *Platform) GetName() (string, error) {
+	return p.getInfo(constants.CL_PLATFORM_NAME)
 }
-
-func (p Platform) GetVendor() (string, error) {
-	return p.getInfo(platformInfoVendor)
+func (p *Platform) GetVendor() (string, error) {
+	return p.getInfo(constants.CL_PLATFORM_VENDOR)
 }
-
-func (p Platform) GetExtensions() ([]Extension, error) {
-	extensions, err := p.getInfo(platformInfoExtensions)
+func (p *Platform) GetExtensions() ([]pure.Extension, error) {
+	extensions, err := p.getInfo(constants.CL_PLATFORM_EXTENSIONS)
 	if err != nil {
 		return nil, err
 	}
 	return strings.Split(extensions, " "), nil
 }
 
-func (p Platform) GetDevices(deviceType DeviceType) ([]Device, error) {
+func (p *Platform) GetDevices(deviceType pure.DeviceType) ([]Device, error) {
 	numDevices := uint32(0)
-	st := getDeviceIDs(p, deviceType, 0, nil, &numDevices)
-	if st != CL_SUCCESS {
-		return nil, errors.New("oops at 1st get device ids")
+	if pure.GetDeviceIDs == nil {
+		return nil, pure.Uninitialized("GetDeviceIDs")
 	}
-
-	deviceIDs := make([]Device, numDevices)
-	st = getDeviceIDs(p, deviceType, numDevices, deviceIDs, nil)
-	if st != CL_SUCCESS {
-		return nil, errors.New("oops at 2nd get device ids")
+	st := pure.GetDeviceIDs(p.P, deviceType, 0, nil, &numDevices)
+	if st != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(st)
 	}
-
-	return deviceIDs, nil
+	deviceIDs := make([]pure.Device, numDevices)
+	st = pure.GetDeviceIDs(p.P, deviceType, numDevices, deviceIDs, nil)
+	if st != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(st)
+	}
+	res := make([]Device, numDevices)
+	for i := uint32(0); i < numDevices; i++ {
+		res[i] = Device{D: deviceIDs[i]}
+	}
+	return res, nil
 }
