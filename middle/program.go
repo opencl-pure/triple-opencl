@@ -1,8 +1,8 @@
-package midle
+package middle
 
 import (
-	"github.com/opencl-pure/opencl/pure"
 	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"strings"
 	"unsafe"
 )
@@ -11,24 +11,12 @@ type Program struct {
 	P pure.Program
 }
 
-type programBuildInfo uint32
-
-type Version string
-
-const (
-	Version1_0 Version = "CL1.0"
-	Version1_1 Version = "CL1.1"
-	Version1_2 Version = "CL1.2"
-	Version2_0 Version = "CL2.0"
-	Version3_0 Version = "CL3.0"
-)
-
 type ProgramBuildOptions struct {
 	// Preprocessor options
 	Warnings          bool
 	Macros            map[string]string
 	DirectoryIncludes []string
-	Version           Version
+	Version           pure.Version
 	// Math intrinsics options
 	SinglePrecisionConstant bool
 	MadEnable               bool

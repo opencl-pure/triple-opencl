@@ -1,4 +1,4 @@
-package midle
+package middle
 
 import (
 	"github.com/opencl-pure/triple-opencl/constants"
@@ -17,7 +17,7 @@ func (cq *CommandQueue) EnqueueBarrier() error {
 	return pure.StatusToErr(pure.EnqueueBarrier(cq.C))
 }
 
-func (cq *CommandQueue) EnqueueNDRangeKernel(kernel Kernel, workDim uint, globalOffsets, globalWorkSizes, localWorkSizes []uint64) error {
+func (cq *CommandQueue) EnqueueNDRangeKernel(kernel *Kernel, workDim uint, globalOffsets, globalWorkSizes, localWorkSizes []uint64) error {
 	if pure.EnqueueNDRangeKernel == nil {
 		return pure.Uninitialized("EnqueueNDRangeKernel")
 	}
@@ -45,7 +45,7 @@ func (cq *CommandQueue) EnqueueNDRangeKernel(kernel Kernel, workDim uint, global
 	))
 }
 
-func (cq *CommandQueue) EnqueueReadBuffer(buffer Buffer, blockingRead bool, data *pure.BufferData) error {
+func (cq *CommandQueue) EnqueueReadBuffer(buffer *Buffer, blockingRead bool, data *pure.BufferData) error {
 	if pure.EnqueueReadBuffer == nil {
 		return pure.Uninitialized("EnqueueReadBuffer")
 	}
@@ -109,7 +109,7 @@ func (cq *CommandQueue) EnqueueMapImage(image Buffer, blockingMap bool, flags []
 	ptr := pure.EnqueueMapImage(
 		cq.C, image.B, blockingMap, mapFlags, origin, region, rowpitch, slicepitch, 0, nil, nil, &st,
 	)
-	if st != CL_SUCCESS {
+	if st != constants.CL_SUCCESS {
 		return pure.StatusToErr(st)
 	}
 	data.Pointer = unsafe.Pointer(ptr)
@@ -129,7 +129,6 @@ func (cq *CommandQueue) Finish() error {
 	if pure.FinishCommandQueue == nil {
 		return pure.Uninitialized("FinishCommandQueue")
 	}
-
 	return pure.StatusToErr(pure.FinishCommandQueue(cq.C))
 }
 

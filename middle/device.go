@@ -1,4 +1,4 @@
-package midle
+package middle
 
 import (
 	"github.com/opencl-pure/triple-opencl/constants"
@@ -6,13 +6,9 @@ import (
 	"strings"
 )
 
-type DeviceType uint32
-
 type Device struct {
 	D pure.Device
 }
-
-type deviceInfo uint32
 
 func (d *Device) getInfo(name pure.DeviceInfo) (string, error) {
 	size := pure.Size(0)

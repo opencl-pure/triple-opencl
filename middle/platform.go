@@ -1,8 +1,8 @@
-package midle
+package middle
 
 import (
-	"github.com/opencl-pure/opencl/pure"
 	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"strings"
 )
 
@@ -32,17 +32,15 @@ func GetPlatforms() ([]Platform, error) {
 	return res, nil
 }
 
-type platformInfo pure.PlatformInfo
-
-func (p Platform) getInfo(name platformInfo) (string, error) {
+func (p Platform) getInfo(name pure.PlatformInfo) (string, error) {
 	size := pure.Size(0)
-	st := pure.GetPlatformInfo(p.P, pure.PlatformInfo(name), pure.Size(0), nil, &size)
+	st := pure.GetPlatformInfo(p.P, name, pure.Size(0), nil, &size)
 	if st != constants.CL_SUCCESS {
 		return "", pure.StatusToErr(st)
 	}
 
 	info := make([]byte, size)
-	st = pure.GetPlatformInfo(p.P, pure.PlatformInfo(name), size, info, nil)
+	st = pure.GetPlatformInfo(p.P, name, size, info, nil)
 	if st != constants.CL_SUCCESS {
 		return "", pure.StatusToErr(st)
 	}

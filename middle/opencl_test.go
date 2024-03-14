@@ -1,7 +1,10 @@
-package midle_test
+package middle_test
 
 import (
 	"fmt"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/middle"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"log"
 	"testing"
 )
@@ -11,24 +14,22 @@ const (
 )
 
 var (
-	code = string(`
-	kernel void kern(global float* out)
-	{
+	code = `
+        __kernel void set_i(__global float* out){
 		size_t i = get_global_id(0);
 		out[i] = i;
-	}
-	`)
+	}`
 )
 
 // https://github.com/PassKeyRa/go-opencl/blob/master/opencl/external/include/CL/cl.h
 
 func Test_Compute(m *testing.T) {
-	err := opencl.Initialize()
+	err := middle.Init(pure.Version2_0)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
 
-	platforms, err := opencl.GetPlatforms()
+	platforms, err := middle.GetPlatforms()
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -52,7 +53,7 @@ func Test_Compute(m *testing.T) {
 	}
 	fmt.Println("platform extensions:", platformExtensions)
 
-	devices, err := platforms[0].GetDevices(opencl.DeviceTypeAll)
+	devices, err := platforms[0].GetDevices(constants.CL_DEVICE_TYPE_ALL)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -71,7 +72,7 @@ func Test_Compute(m *testing.T) {
 	defer ctx.Release()
 	fmt.Println("context:", ctx)
 
-	queue, err := ctx.CreateCommandQueue(devices[0])
+	queue, err := ctx.CreateCommandQueue(&devices[0])
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -85,13 +86,13 @@ func Test_Compute(m *testing.T) {
 	defer program.Release()
 	fmt.Println("program:", program)
 
-	logs, err := program.Build(devices[0], nil)
+	logs, err := program.Build(&devices[0], nil)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
 	fmt.Println("logs:", logs)
 
-	kernel, err := program.CreateKernel("kern")
+	kernel, err := program.CreateKernel("set_i")
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -99,12 +100,12 @@ func Test_Compute(m *testing.T) {
 	fmt.Println("kernel:", kernel)
 
 	data := make([]float32, dataSize)
-	bufferData := opencl.GetBufferData(data)
+	bufferData := middle.GetBufferData(data)
 	fmt.Println("buffer data:", bufferData.DataSize, bufferData.Pointer)
 	buffer, err := ctx.CreateBuffer(
-		[]opencl.MemFlag{
-			opencl.MemFlagsWriteOnly,
-			opencl.MemFlagsAllocHostPtr,
+		[]pure.MemFlag{
+			constants.CL_MEM_WRITE_ONLY,
+			constants.CL_MEM_ALLOC_HOST_PTR,
 		},
 		uint(bufferData.DataSize),
 	)
@@ -119,8 +120,8 @@ func Test_Compute(m *testing.T) {
 		log.Fatal("err:", err)
 	}
 	fmt.Println("buffer size:", size)
-
-	err = kernel.SetArg(0, opencl.NewKernelArg(&buffer))
+	arg, _ := middle.NewKernelArg(buffer)
+	err = kernel.SetArg(0, arg)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -130,10 +131,10 @@ func Test_Compute(m *testing.T) {
 		log.Fatal("err:", err)
 	}
 
-	queue.Flush()
-	queue.Finish()
+	_ = queue.Flush()
+	_ = queue.Finish()
 
-	err = queue.EnqueueReadBuffer(buffer, true, opencl.GetBufferData(data))
+	err = queue.EnqueueReadBuffer(buffer, true, middle.GetBufferData(data))
 	if err != nil {
 		log.Fatal("err:", err)
 	}

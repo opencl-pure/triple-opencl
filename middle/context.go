@@ -1,4 +1,4 @@
-package midle
+package middle
 
 import (
 	"github.com/opencl-pure/triple-opencl/constants"
@@ -47,7 +47,7 @@ func (d *Device) CreateContext(properties *ContextProperties) (*Context, error) 
 	if pure.CreateContext == nil {
 		return nil, pure.Uninitialized("CreateContext")
 	}
-	ctx := pure.CreateContext(unsafe.Pointer(&flattened[0]), 1, []pure.Device{d}, nil, nil, &st)
+	ctx := pure.CreateContext(unsafe.Pointer(&flattened[0]), 1, []pure.Device{d.D}, nil, nil, &st)
 	if st != constants.CL_SUCCESS {
 		return nil, pure.StatusToErr(st)
 	}

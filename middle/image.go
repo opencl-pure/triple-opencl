@@ -1,10 +1,6 @@
-package midle
+package middle
 
-import (
-	"github.com/opencl-pure/triple-opencl/pure"
-	"unsafe"
-)
-
+/*
 type BufferData struct {
 	TypeSize uintptr
 	DataSize uintptr
@@ -26,3 +22,6 @@ type ImageData struct {
 	RowPitch   uint
 	SlicePitch uint
 }
+
+
+*/

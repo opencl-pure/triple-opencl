@@ -1,6 +1,6 @@
 package pure
 
-func Init(version int) error {
+func Init(version Version) error {
 	handle, err := loadLibrary()
 	if err != nil {
 		return err
@@ -22,11 +22,11 @@ func Init(version int) error {
 	err = registerLibFuncWithoutPanic(&CreateBuffer, handle, "clCreateBuffer", err)
 	err = registerLibFuncWithoutPanic(&CreateImage2D, handle, "clCreateImage2D", err)
 	// Command queue
-	if version >= 2 {
+	if version == Version2_0 || version == Version3_0 {
 		err = registerLibFuncWithoutPanic(&CreateCommandQueueWithProperties, handle, "clCreateCommandQueueWithProperties", err)
-	} else {
-		err = registerLibFuncWithoutPanic(&CreateCommandQueue, handle, "clCreateCommandQueue", err)
 	}
+	err = registerLibFuncWithoutPanic(&CreateCommandQueue, handle, "clCreateCommandQueue", err)
+
 	err = registerLibFuncWithoutPanic(&EnqueueBarrier, handle, "clEnqueueBarrier", err)
 	err = registerLibFuncWithoutPanic(&EnqueueNDRangeKernel, handle, "clEnqueueNDRangeKernel", err)
 	err = registerLibFuncWithoutPanic(&EnqueueReadBuffer, handle, "clEnqueueReadBuffer", err)

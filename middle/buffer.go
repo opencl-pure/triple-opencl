@@ -1,4 +1,4 @@
-package midle
+package middle
 
 import (
 	"github.com/opencl-pure/triple-opencl/constants"
