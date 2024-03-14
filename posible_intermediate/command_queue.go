@@ -1,39 +1,45 @@
-package high
+package posible_intermediate
 
 // #include "opencl.h"
 import "C"
 import (
 	"errors"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"unsafe"
 )
 
 type CommandQueue struct {
-	commandQueue C.cl_command_queue
+	commandQueue pure.CommandQueue
 }
 
-func createCommandQueue(context Context, device Device) (CommandQueue, error) {
-	var errInt clError
-	queue := C.clCreateCommandQueue(
-		context.context,
-		device.deviceID,
-		0,
-		(*C.cl_int)(&errInt),
-	)
-	if errInt != clSuccess {
-		return CommandQueue{}, clErrorToError(errInt)
+func createCommandQueue(context *Context, device *Device) (*CommandQueue, error) {
+	var errInt pure.Status
+	if pure.CreateCommandQueue == nil {
+		return nil, pure.Uninitialized("CreateCommandQueue")
 	}
-
-	return CommandQueue{queue}, nil
+	queue := pure.CreateCommandQueue(context.context, device.deviceID, 0, &errInt)
+	if errInt != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(errInt)
+	}
+	return &CommandQueue{queue}, nil
 }
 
-func (c CommandQueue) EnqueueNDRangeKernel(kernel Kernel, workDim uint32, globalWorkSize []uint64) error {
-	errInt := clError(C.clEnqueueNDRangeKernel(c.commandQueue,
+func (c *CommandQueue) EnqueueNDRangeKernel(kernel *Kernel, workDim uint32, globalWorkSize []uint64) error {
+	gws := make([]pure.Size, 0, len(globalWorkSize))
+	for _, u := range globalWorkSize {
+		gws = append(gws, pure.Size(u))
+	}
+	if pure.EnqueueNDRangeKernel == nil {
+		return pure.Uninitialized("EnqueueNDRangeKernel")
+	}
+	errInt := pure.EnqueueNDRangeKernel(c.commandQueue,
 		kernel.kernel,
-		C.cl_uint(workDim),
+		uint(workDim),
 		nil,
-		(*C.size_t)(&globalWorkSize[0]),
-		nil, 0, nil, nil))
-	return clErrorToError(errInt)
+		gws,
+		nil, 0, nil, nil)
+	return pure.StatusToErr(errInt)
 }
 
 func (c CommandQueue) EnqueueReadBuffer(buffer Buffer, blockingRead bool, dataPtr interface{}) error {

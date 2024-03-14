@@ -1,75 +1,48 @@
+// program
 package high
 
-// #include "opencl.h"
 import "C"
 import (
-	"strings"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"unsafe"
 )
 
 type Program struct {
-	program C.cl_program
+	program pure.Program
 }
 
-func createProgramWithSource(context Context, programCode string) (Program, error) {
-	cs := C.CString(programCode)
-	defer C.free(unsafe.Pointer(cs))
-
-	var errInt clError
-	program := C.clCreateProgramWithSource(
-		context.context,
-		1,
-		&cs,
-		nil,
-		(*C.cl_int)(&errInt),
-	)
-	if errInt != clSuccess {
-		return Program{}, clErrorToError(errInt)
+// Return the program binaries associated with program.
+func (p *Program) GetBinaries() ([][]byte, error) {
+	var devices pure.Device
+	err := pure.StatusToErr(pure.GetProgramInfo(p.program, pure.ProgramBuildInfo(constants.CL_PROGRAM_NUM_DEVICES), pure.Size(4), unsafe.Pointer(&devices), nil))
+	if err != nil {
+		return nil, err
+	}
+	deviceIDs := make([]pure.Device, devices)
+	err = pure.StatusToErr(pure.GetProgramInfo(p.program, constants.CL_PROGRAM_DEVICES, pure.Size(len(deviceIDs)*4), unsafe.Pointer(&deviceIDs[0]), nil))
+	if err != nil {
+		return nil, err
+	}
+	binarySizes := make([]pure.Size, devices)
+	err = pure.StatusToErr(pure.GetProgramInfo(p.program, constants.CL_PROGRAM_BINARY_SIZES, pure.Size(len(deviceIDs)*4), unsafe.Pointer(&binarySizes[0]), nil))
+	if err != nil {
+		return nil, err
 	}
 
-	return Program{program}, nil
-}
-
-func (p Program) Build(device Device, log *string) error {
-	emptyString := C.CString("\x00")
-	defer C.free(unsafe.Pointer(emptyString))
-
-	var errInt clError = clError(C.clBuildProgram(
-		p.program,
-		0,
-		nil,
-		emptyString,
-		nil,
-		nil,
-	))
-	if errInt == clSuccess {
-		return nil
+	binaries := make([][]byte, devices)
+	cBinaries := make([]unsafe.Pointer, devices)
+	for i, size := range binarySizes {
+		cBinaries[i] = unsafe.Pointer(&make([]byte, size)[0])
+	}
+	err = pure.StatusToErr(pure.GetProgramInfo(p.program, constants.CL_PROGRAM_BINARIES, pure.Size(len(cBinaries)*4), unsafe.Pointer(&cBinaries[0]), nil))
+	if err != nil {
+		return nil, err
 	}
 
-	// If there was a log provided, get the compiler log. Otherwise just return the error
-	if log == nil {
-		return clErrorToError(errInt)
+	for i, size := range binarySizes {
+		binaries[i] = (*(*[1 << 20]byte)(cBinaries[i]))[:size]
 	}
 
-	size := uint64(4096)
-	compilerLog := make([]byte, size)
-	C.clGetProgramBuildInfo(
-		p.program,
-		device.deviceID,
-		C.CL_PROGRAM_BUILD_LOG,
-		C.size_t(size),
-		unsafe.Pointer(&compilerLog[0]),
-		nil)
-
-	*log = strings.TrimRight(string(compilerLog), "\x00")
-
-	return clErrorToError(errInt)
-}
-
-func (p Program) Release() {
-	C.clReleaseProgram(p.program)
-}
-
-func (p Program) CreateKernel(kernelName string) (Kernel, error) {
-	return createKernel(p, kernelName)
+	return binaries, nil
 }

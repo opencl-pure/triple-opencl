@@ -1,4 +1,4 @@
-package high
+package posible_intermediate
 
 import "strings"
 

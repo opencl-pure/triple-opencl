@@ -1,55 +1,55 @@
-package high
+package posible_intermediate
 
 // #include "opencl.h"
 import "C"
 import (
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"strings"
-	"unsafe"
 )
 
 // PlatformInfo is a type of info that can be retrieved by Platform.GetInfo.
-type PlatformInfo uint32
+type PlatformInfo pure.PlatformInfo
 
 // PlatformInfo constants.
 const (
-	PlatformProfile    PlatformInfo = PlatformInfo(C.CL_PLATFORM_PROFILE)
-	PlatformVersion                 = PlatformInfo(C.CL_PLATFORM_VERSION)
-	PlatformName                    = PlatformInfo(C.CL_PLATFORM_NAME)
-	PlatformVendor                  = PlatformInfo(C.CL_PLATFORM_VENDOR)
-	PlatformExtensions              = PlatformInfo(C.CL_PLATFORM_EXTENSIONS)
+	PlatformProfile    PlatformInfo = PlatformInfo(constants.CL_PLATFORM_PROFILE)
+	PlatformVersion                 = PlatformInfo(constants.CL_PLATFORM_VERSION)
+	PlatformName                    = PlatformInfo(constants.CL_PLATFORM_NAME)
+	PlatformVendor                  = PlatformInfo(constants.CL_PLATFORM_VENDOR)
+	PlatformExtensions              = PlatformInfo(constants.CL_PLATFORM_EXTENSIONS)
 )
 
 // Platform is a structure for an OpenCL platform.
 type Platform struct {
-	platformID C.cl_platform_id
+	platformID pure.Platform
 	version    MajorMinor
 }
 
 // GetPlatforms returns a slice containing all platforms available.
 func GetPlatforms() ([]Platform, error) {
-	var platformCount C.cl_uint = C.cl_uint(0)
-	errInt := clError(C.clGetPlatformIDs(0, nil, &platformCount))
-	if errInt != clSuccess {
-		return nil, clErrorToError(errInt)
+	var platformCount = uint32(0)
+	if pure.GetPlatformIDs == nil {
+		return nil, pure.Uninitialized("GetPlatformIDs")
 	}
-
-	platformIDs := make([]C.cl_platform_id, uint32(platformCount))
-	errInt = clError(C.clGetPlatformIDs(platformCount, &platformIDs[0], nil))
-	if errInt != clSuccess {
-		return nil, clErrorToError(errInt)
+	errInt := pure.GetPlatformIDs(0, nil, &platformCount)
+	if errInt != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(errInt)
 	}
-
+	platformIDs := make([]pure.Platform, platformCount)
+	errInt = pure.GetPlatformIDs(platformCount, platformIDs, nil)
+	if errInt != constants.CL_SUCCESS {
+		return nil, pure.StatusToErr(errInt)
+	}
 	platforms := make([]Platform, len(platformIDs))
 	for i, platformID := range platformIDs {
 		platforms[i] = Platform{
 			platformID: platformID,
 		}
-
 		if err := platforms[i].GetInfo(PlatformVersion, &platforms[i].version); err != nil {
 			return nil, err
 		}
 	}
-
 	return platforms, nil
 }
 
@@ -66,39 +66,24 @@ func GetPlatforms() ([]Platform, error) {
 // Note that if PlatformExtensions is retrieved with output being a *string,
 // the extensions will be a space-separated list as specified by the OpenCL
 // reference for clGetPlatformInfo.
-func (p Platform) GetInfo(name PlatformInfo, output interface{}) error {
-	var size uint64
-	errInt := clError(C.clGetPlatformInfo(
-		p.platformID,
-		C.cl_platform_info(name),
-		0,
-		nil,
-		(*C.size_t)(&size),
-	))
-	if errInt != clSuccess {
-		return clErrorToError(errInt)
+func (p *Platform) GetInfo(name PlatformInfo, output interface{}) error {
+	var size pure.Size
+	errInt := pure.GetPlatformInfo(p.platformID, pure.PlatformInfo(name), 0, nil, &size)
+	if errInt != constants.CL_SUCCESS {
+		return pure.StatusToErr(errInt)
 	}
-
 	if size == 0 {
 		outputStr, _ := output.(*string)
 		*outputStr = ""
 		return nil
 	}
-
 	info := make([]byte, size)
-	errInt = clError(C.clGetPlatformInfo(
-		p.platformID,
-		C.cl_platform_info(name),
-		C.size_t(size),
-		unsafe.Pointer(&info[0]),
-		nil,
-	))
-	if errInt != clSuccess {
-		return clErrorToError(errInt)
+	errInt = pure.GetPlatformInfo(p.platformID, pure.PlatformInfo(name),
+		size, info, nil)
+	if errInt != constants.CL_SUCCESS {
+		return pure.StatusToErr(errInt)
 	}
-
 	outputString := zeroTerminatedByteSliceToString(info)
-
 	switch t := output.(type) {
 	case *string:
 		*t = outputString
@@ -111,32 +96,27 @@ func (p Platform) GetInfo(name PlatformInfo, output interface{}) error {
 		if errVer != nil {
 			return errVer
 		}
-
-		*t = ver
-
+		*t = *ver
 	case *[]string:
 		if name != PlatformExtensions {
 			return UnexpectedType
 		}
-
 		elems := strings.Split(outputString, " ")
 		*t = elems
-
 	default:
 		return UnexpectedType
 	}
-
 	return nil
 }
 
 // GetDevices returns a slice of devices of type deviceType for a Platform. If there are
 // no such devices it returns an empty slice.
-func (p Platform) GetDevices(deviceType DeviceType) ([]Device, error) {
+func (p *Platform) GetDevices(deviceType DeviceType) ([]Device, error) {
 	return getDevices(p, deviceType)
 }
 
 // GetVersion returns the platform OpenCL version.
-func (p Platform) GetVersion() MajorMinor {
+func (p *Platform) GetVersion() MajorMinor {
 	return p.version
 }
 
@@ -146,10 +126,10 @@ func (p Platform) GetVersion() MajorMinor {
 // OpenCL<space><major_version.minor_version><space><platform-specific information>
 //
 // The only part that concerns us here is the major/minor version combination.
-func parseVersion(ver string) (MajorMinor, error) {
+func parseVersion(ver string) (*MajorMinor, error) {
 	elems := strings.SplitN(ver, " ", 3)
 	if len(elems) < 3 || elems[0] != "OpenCL" {
-		return MajorMinor{}, ErrorParsingVersion
+		return nil, ErrorParsingVersion
 	}
 
 	return ParseMajorMinor(elems[1])
