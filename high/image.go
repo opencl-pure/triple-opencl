@@ -147,7 +147,7 @@ func (img *Image) copy(data []byte) <-chan error {
 	err := pure.StatusToErr(pure.EnqueueWriteImage(
 		img.buf.device.queue,
 		img.buf.memobj,
-		constants.CL_FALSE,
+		false,
 		cOrigin,
 		cRegion,
 		0,
@@ -180,7 +180,7 @@ func (img *Image) Data() (image.Image, error) {
 	err := pure.StatusToErr(pure.EnqueueReadImage(
 		img.buf.device.queue,
 		img.buf.memobj,
-		constants.CL_TRUE,
+		true,
 		cOrigin,
 		cRegion,
 		0,

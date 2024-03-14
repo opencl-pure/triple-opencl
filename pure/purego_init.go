@@ -1,5 +1,10 @@
 package pure
 
+import (
+	"errors"
+	"github.com/ebitengine/purego"
+)
+
 func Init(version Version) error {
 	handle, err := loadLibrary()
 	if err != nil {
@@ -30,14 +35,14 @@ func Init(version Version) error {
 	err = registerLibFuncWithoutPanic(&EnqueueBarrier, handle, "clEnqueueBarrier", err)
 	err = registerLibFuncWithoutPanic(&EnqueueNDRangeKernel, handle, "clEnqueueNDRangeKernel", err)
 	err = registerLibFuncWithoutPanic(&EnqueueReadBuffer, handle, "clEnqueueReadBuffer", err)
-	//TODO: purego: broken too many arguments
-	err = registerLibFuncWithoutPanic(&EnqueueReadImage, handle, "clEnqueueReadImage", err)
-	err = registerLibFuncWithoutPanic(&EnqueueWriteImage, handle, "clEnqueueWriteImage", err)
-
 	err = registerLibFuncWithoutPanic(&EnqueueWriteBuffer, handle, "clEnqueueWriteBuffer", err)
 	//TODO: purego: broken too many arguments
-	err = registerLibFuncWithoutPanic(&EnqueueMapImage, handle, "clEnqueueMapImage", err)
-	err = registerLibFuncWithoutPanic(&EnqueueMapBuffer, handle, "clEnqueueMapBuffer", err)
+	/*
+		err = registerLibFuncWithoutPanic(&EnqueueReadImage, handle, "clEnqueueReadImage", err)
+		err = registerLibFuncWithoutPanic(&EnqueueWriteImage, handle, "clEnqueueWriteImage", err)
+		err = registerLibFuncWithoutPanic(&EnqueueMapImage, handle, "clEnqueueMapImage", err)
+		err = registerLibFuncWithoutPanic(&EnqueueMapBuffer, handle, "clEnqueueMapBuffer", err) // maybe?
+	*/
 
 	err = registerLibFuncWithoutPanic(&EnqueueUnmapMemObject, handle, "clEnqueueUnmapMemObject", err)
 	err = registerLibFuncWithoutPanic(&FinishCommandQueue, handle, "clFinish", err)
@@ -55,7 +60,10 @@ func Init(version Version) error {
 	// Buffer
 	err = registerLibFuncWithoutPanic(&GetMemObjectInfo, handle, "clGetMemObjectInfo", err)
 	err = registerLibFuncWithoutPanic(&ReleaseMemObject, handle, "clReleaseMemObject", err)
-	return nil
+	if err != nil {
+		err = errors.Join(err, purego.Dlclose(handle))
+	}
+	return err
 }
 
 func InitializeGLSharing() error {

@@ -2,6 +2,7 @@ package pure
 
 import (
 	"errors"
+	"fmt"
 	"github.com/ebitengine/purego"
 	"image"
 	"unsafe"
@@ -36,15 +37,11 @@ func GetImageBufferData(img image.RGBA) *ImageData {
 }
 
 func registerLibFuncWithoutPanic(fptr interface{}, handle uintptr, name string, error0 error) (e error) {
-	e = error0
 	defer func() {
 		if r := recover(); r != nil {
-			err, ok := r.(error)
-			if ok {
-				e = err
-				return
-			}
-			e = errors.Join(error0, err)
+			e = errors.Join(error0, errors.New(fmt.Sprint(r)))
+		} else {
+			e = error0
 		}
 	}()
 	purego.RegisterLibFunc(fptr, handle, name)

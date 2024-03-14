@@ -48,7 +48,7 @@ func (b *buffer) copy(size int, ptr unsafe.Pointer) <-chan error {
 	err := pure.StatusToErr(pure.EnqueueWriteBuffer(
 		b.device.queue,
 		b.memobj,
-		constants.CL_FALSE,
+		false,
 		0,
 		pure.Size(size),
 		ptr,

@@ -14,13 +14,11 @@ var (
 
 // GetDefaultDevice ...
 func GetDefaultDevice() (*Device, error) {
-	id := make([]pure.Device, 1)
-	err := pure.StatusToErr(
-		pure.GetDeviceIDs(0, pure.DeviceType(constants.CL_DEVICE_TYPE_DEFAULT), 1, id, nil))
+	id, err := GetDevices(pure.DeviceType(constants.CL_DEVICE_TYPE_DEFAULT))
 	if err != nil {
 		return nil, err
 	}
-	return newDevice(id)
+	return id[0], nil
 }
 
 // GetDevices returns all devices of all platforms with specified type
@@ -89,6 +87,6 @@ func newDevice(id []pure.Device) (*Device, error) {
 	return d, nil
 }
 
-func Init(version int) (e error) {
+func Init(version pure.Version) (e error) {
 	return pure.Init(version)
 }

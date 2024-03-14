@@ -2,7 +2,6 @@ package high
 
 import (
 	"errors"
-	"github.com/opencl-pure/triple-opencl/constants"
 	"github.com/opencl-pure/triple-opencl/pure"
 	"unsafe"
 )
@@ -52,7 +51,7 @@ func (v *Vector[T]) Data() ([]T, error) {
 	err := pure.StatusToErr(pure.EnqueueReadBuffer(
 		v.buf.device.queue,
 		v.buf.memobj,
-		constants.CL_TRUE,
+		true,
 		0,
 		v.buf.size,
 		unsafe.Pointer(&data[0]),

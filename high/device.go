@@ -30,7 +30,7 @@ func errJoin(e1, e2 error) error {
 }
 
 // Release releases the device
-func (d Device) Release() error {
+func (d *Device) Release() error {
 	var result error
 	for _, p := range d.programs {
 		if err := pure.StatusToErr(pure.ReleaseProgram(p)); err != nil {
@@ -106,7 +106,7 @@ func (d *Device) AddProgram(source string) (*Program, error) {
 	if err != nil {
 		panic(err)
 	}
-	ret = pure.BuildProgram(p, 1, d.id, "", nil, nil)
+	ret = pure.BuildProgram(p, 1, d.id, []byte(""), nil, nil)
 	if ret != constants.CL_SUCCESS {
 		if ret == constants.CL_BUILD_PROGRAM_FAILURE {
 			var n pure.Size

@@ -154,7 +154,7 @@ func (k *Kernel) setArg(index int, arg interface{}) error {
 
 func (k *Kernel) setArgBuffer(index int, buf *buffer) error {
 	mem := buf.memobj
-	return pure.StatusToErr(pure.SetKernelArg(k.k, uint(index), pure.Size(unsafe.Sizeof(mem)), unsafe.Pointer(&mem)))
+	return pure.StatusToErr(pure.SetKernelArg(k.k, uint32(index), pure.Size(unsafe.Sizeof(mem)), unsafe.Pointer(&mem)))
 }
 
 func (k *Kernel) setArgLocal(index int, size int) error {
@@ -162,7 +162,7 @@ func (k *Kernel) setArgLocal(index int, size int) error {
 }
 
 func (k *Kernel) setArgUnsafe(index, argSize int, arg unsafe.Pointer) error {
-	return pure.StatusToErr(pure.SetKernelArg(k.k, uint(index), pure.Size(argSize), arg))
+	return pure.StatusToErr(pure.SetKernelArg(k.k, uint32(index), pure.Size(argSize), arg))
 }
 
 func (k *Kernel) call(workOffsets, workSizes, lokalSizes []int, waitEvents []*Event) (event *Event, err error) {
@@ -189,6 +189,9 @@ func (k *Kernel) call(workOffsets, workSizes, lokalSizes []int, waitEvents []*Ev
 	cWaitEvents := make([]pure.Event, len(waitEvents))
 	for i := 0; i < len(waitEvents); i++ {
 		cWaitEvents[i] = waitEvents[i].event
+	}
+	if waitEvents == nil {
+		cWaitEvents = nil
 	}
 	event = &Event{}
 	err = pure.StatusToErr(pure.EnqueueNDRangeKernel(

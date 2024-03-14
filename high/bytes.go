@@ -2,7 +2,6 @@ package high
 
 import "C"
 import (
-	"github.com/opencl-pure/triple-opencl/constants"
 	"github.com/opencl-pure/triple-opencl/pure"
 	"unsafe"
 )
@@ -43,7 +42,7 @@ func (b *Bytes) Data() ([]byte, error) {
 	err := pure.StatusToErr(pure.EnqueueReadBuffer(
 		b.buf.device.queue,
 		b.buf.memobj,
-		constants.CL_TRUE,
+		true,
 		0,
 		b.buf.size,
 		unsafe.Pointer(&data[0]),

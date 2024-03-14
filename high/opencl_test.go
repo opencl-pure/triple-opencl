@@ -3,6 +3,7 @@ package high
 import (
 	"fmt"
 	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -12,6 +13,10 @@ import (
 )
 
 func TestGetDevices(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	ds, err := GetDevices(constants.CL_DEVICE_TYPE_ALL)
 	if err != nil {
 		t.Fatal(err)
@@ -43,6 +48,10 @@ func TestGetDevices(t *testing.T) {
 }
 
 func TestBytes(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		t.Fatal(err)
@@ -76,6 +85,10 @@ func TestBytes(t *testing.T) {
 }
 
 func TestVector(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		t.Fatal(err)
@@ -120,6 +133,10 @@ __kernel void testByteKernel(__global char* data) {
 `
 
 func TestBadProgram(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		t.Fatal(err)
@@ -139,6 +156,10 @@ func recoverAddProgram(t *testing.T) {
 }
 
 func TestBadKernel(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		t.Fatal(err)
@@ -162,6 +183,10 @@ func recoverKernel(t *testing.T) {
 }
 
 func TestKernel(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		t.Fatal(err)
@@ -255,6 +280,10 @@ func writeImage(img *Image, path string) error {
 }
 
 func TestImage(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		t.Fatal(err)
@@ -329,6 +358,10 @@ __kernel void gaussian_blur(
 }`
 
 func TestGaussianBlur(t *testing.T) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		t.Fatal(err)
@@ -383,6 +416,10 @@ func BenchmarkInvertCPU(b *testing.B) {
 }
 
 func BenchmarkInvertGPU(b *testing.B) {
+	err := Init(pure.Version2_0)
+	if err != nil {
+		b.Fatal(err)
+	}
 	d, err := GetDefaultDevice()
 	if err != nil {
 		b.Fatal(err)
