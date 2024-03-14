@@ -1,5 +1,5 @@
 package midle
 
-import "opencl-pure/opencl/pure"
+import "github.com/opencl-pure/triple-opencl/pure"
 
 type Event pure.Event

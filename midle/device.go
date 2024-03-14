@@ -2,7 +2,7 @@ package midle
 
 import (
 	"github.com/opencl-pure/triple-opencl/constants"
-	"opencl-pure/opencl/pure"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"strings"
 )
 

@@ -1,7 +1,7 @@
 package midle
 
 import (
-	"opencl-pure/opencl/pure"
+	"github.com/opencl-pure/opencl/pure"
 )
 
 type Kernel struct {
