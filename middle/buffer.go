@@ -11,9 +11,6 @@ type Buffer struct {
 }
 
 func (b *Buffer) getInfo(name pure.MemInfo) (uint, error) {
-	if pure.GetMemObjectInfo == nil {
-		return 0, pure.Uninitialized("GetMemObjectInfo")
-	}
 	info := uint(0)
 	st := pure.GetMemObjectInfo(b.B, name, pure.Size(unsafe.Sizeof(info)), unsafe.Pointer(&info), nil)
 	if st != constants.CL_SUCCESS {
@@ -27,18 +24,12 @@ func (b *Buffer) Size() (uint, error) {
 }
 
 func (b *Buffer) Release() error {
-	if pure.ReleaseMemObject == nil {
-		return pure.Uninitialized("ReleaseMemObject")
-	}
 	return pure.StatusToErr(pure.ReleaseMemObject(b.B))
 }
 
 // GL
 
 func (b *Buffer) GetGLObjectInfo() (pure.CLGLObjectType, error) {
-	if pure.GetGLObjectInfo == nil {
-		return 0, pure.Uninitialized("GetGLObjectInfo")
-	}
 	var objectType pure.CLGLObjectType
 	st := pure.GetGLObjectInfo(b.B, &objectType, nil)
 	if st != constants.CL_SUCCESS {
@@ -48,9 +39,6 @@ func (b *Buffer) GetGLObjectInfo() (pure.CLGLObjectType, error) {
 }
 
 func (b *Buffer) GetGLTextureInfo(info pure.CLGLTextureInfo) (uint32, error) {
-	if pure.GetGLTextureInfo == nil {
-		return 0, pure.Uninitialized("GetGLTextureInfo")
-	}
 	var results = []uint32{0}
 	st := pure.GetGLTextureInfo(
 		b.B, info, pure.Size(unsafe.Sizeof(&results[0])),
