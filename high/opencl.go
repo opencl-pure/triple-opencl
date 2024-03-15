@@ -1,5 +1,6 @@
 package high
 
+import "C"
 import (
 	"errors"
 	"github.com/opencl-pure/triple-opencl/constants"
@@ -22,27 +23,24 @@ func GetDefaultDevice() (*Device, error) {
 
 // GetDevices returns all devices of all platforms with specified type
 func GetDevices(deviceType pure.DeviceType) ([]*Device, error) {
-	if pure.GetDeviceIDs == nil {
-		return nil, pure.Uninitialized("GetDeviceIDs")
-	}
 	platformIds, err := getPlatforms()
 	if err != nil {
 		return nil, err
 	}
-	devices := make([]*Device, 0, len(platformIds)+1)
+	var devices []*Device
 	for _, p := range platformIds {
 		var n uint32
-		err = pure.StatusToErr(pure.GetDeviceIDs(p.p, deviceType, 0, nil, &n))
+		err = pure.StatusToErr(pure.GetDeviceIDs(p, deviceType, 0, nil, &n))
 		if err != nil {
 			return nil, err
 		}
 		deviceIds := make([]pure.Device, int(n))
-		err = pure.StatusToErr(pure.GetDeviceIDs(p.p, deviceType, n, deviceIds, nil))
+		err = pure.StatusToErr(pure.GetDeviceIDs(p, deviceType, n, deviceIds, nil))
 		if err != nil {
 			return nil, err
 		}
 		for _, d := range deviceIds {
-			device, err := newDevice(d, p)
+			device, err := newDevice([]pure.Device{d})
 			if err != nil {
 				return nil, err
 			}
@@ -52,16 +50,25 @@ func GetDevices(deviceType pure.DeviceType) ([]*Device, error) {
 	return devices, nil
 }
 
-func newDevice(id pure.Device, p *Platform) (*Device, error) {
-	if pure.CreateContext == nil {
-		return nil, pure.Uninitialized("CreateContext")
+func getPlatforms() ([]pure.Platform, error) {
+	var n uint32
+	if err := pure.StatusToErr(pure.GetPlatformIDs(0, nil, &n)); err != nil {
+		return nil, err
 	}
-	if pure.CreateCommandQueue == nil && pure.CreateCommandQueueWithProperties == nil {
-		return nil, errors.Join(pure.Uninitialized("CreateCommandQueue"), pure.Uninitialized("CreateCommandQueueWithProperties"))
+	if n == 0 {
+		return nil, errors.New("unknown error no available platform")
 	}
-	d := &Device{id: id, platform: p}
+	platformIds := make([]pure.Platform, int(n))
+	if err := pure.StatusToErr(pure.GetPlatformIDs(n, platformIds, nil)); err != nil {
+		return nil, err
+	}
+	return platformIds, nil
+}
+
+func newDevice(id []pure.Device) (*Device, error) {
+	d := &Device{id: id}
 	var ret pure.Status
-	d.ctx = pure.CreateContext(nil, 1, []pure.Device{id}, nil, nil, &ret)
+	d.ctx = pure.CreateContext(nil, 1, id, nil, nil, &ret)
 	err := pure.StatusToErr(ret)
 	if err != nil {
 		return nil, err
@@ -70,9 +77,9 @@ func newDevice(id pure.Device, p *Platform) (*Device, error) {
 		return nil, ErrUnknown
 	}
 	if pure.CreateCommandQueueWithProperties != nil {
-		d.queue = pure.CreateCommandQueueWithProperties(d.ctx, d.id, 0, &ret)
+		d.queue = pure.CreateCommandQueueWithProperties(d.ctx, d.id[0], 0, &ret)
 	} else {
-		d.queue = pure.CreateCommandQueue(d.ctx, d.id, 0, &ret)
+		d.queue = pure.CreateCommandQueue(d.ctx, d.id[0], 0, &ret)
 	}
 	if err = pure.StatusToErr(ret); err != nil {
 		return nil, err

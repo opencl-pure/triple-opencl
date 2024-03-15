@@ -1,6 +1,7 @@
 // program
 package high
 
+import "C"
 import (
 	"github.com/opencl-pure/triple-opencl/constants"
 	"github.com/opencl-pure/triple-opencl/pure"

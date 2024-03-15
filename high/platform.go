@@ -1,11 +1,6 @@
 package high
 
-import (
-	"github.com/opencl-pure/triple-opencl/constants"
-	"github.com/opencl-pure/triple-opencl/pure"
-	"strings"
-)
-
+/*
 type Platform struct {
 	p pure.Platform
 }
@@ -61,3 +56,4 @@ func (p *Platform) GetExtensions() ([]pure.Extension, error) {
 	}
 	return strings.Split(extensions, " "), nil
 }
+*/

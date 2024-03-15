@@ -16,7 +16,7 @@ func (event *Event) Wait() error {
 	return pure.StatusToErr(pure.WaitForEvents(1, list))
 }
 
-// Release Decrements the event reference count.
+// Decrements the event reference count.
 func (event *Event) Release() error {
 	return pure.StatusToErr(pure.ReleaseEvent(event.event))
 }

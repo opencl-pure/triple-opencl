@@ -1,5 +1,6 @@
 package high
 
+import "C"
 import (
 	"errors"
 	"github.com/opencl-pure/triple-opencl/constants"
@@ -12,11 +13,20 @@ import (
 // represents the device on which memory can be allocated and kernels run
 // it abstracts away all the complexity of contexts/platforms/queues
 type Device struct {
-	id       pure.Device
+	id       []pure.Device
 	ctx      pure.Context
 	queue    pure.CommandQueue
 	programs []pure.Program // only one
-	platform *Platform
+}
+
+func errJoin(e1, e2 error) error {
+	if e1 != nil && e2 != nil {
+		return errors.New(e1.Error() + "\n" + e2.Error())
+	}
+	if e1 != nil {
+		return e1
+	}
+	return e2
 }
 
 // Release releases the device
@@ -24,22 +34,22 @@ func (d *Device) Release() error {
 	var result error
 	for _, p := range d.programs {
 		if err := pure.StatusToErr(pure.ReleaseProgram(p)); err != nil {
-			result = errors.Join(result, err)
+			result = errJoin(result, err)
 		}
 	}
 	if err := pure.StatusToErr(pure.ReleaseCommandQueue(d.queue)); err != nil {
-		result = errors.Join(result, err)
+		result = errJoin(result, err)
 	}
 	if err := pure.StatusToErr(pure.ReleaseContext(d.ctx)); err != nil {
-		result = errors.Join(result, err)
+		result = errJoin(result, err)
 	}
-	return errors.Join(result, pure.StatusToErr(pure.ReleaseDevice(d.id)))
+	return errJoin(result, pure.StatusToErr(pure.ReleaseDevice(d.id[0])))
 }
 
 func (d *Device) GetInfoString(param pure.DeviceInfo) (string, error) {
 	strC := make([]byte, 1024)
 	var strN pure.Size
-	err := pure.StatusToErr(pure.GetDeviceInfo(d.id, param, 1024, strC, &strN))
+	err := pure.StatusToErr(pure.GetDeviceInfo(d.id[0], param, 1024, strC, &strN))
 	if err != nil {
 		return "", err
 	}
@@ -49,7 +59,7 @@ func (d *Device) GetInfoString(param pure.DeviceInfo) (string, error) {
 func (d *Device) String() (string, error) {
 	name, err := d.Name()
 	vendor, err2 := d.Vendor()
-	return name + " " + vendor, errors.Join(err, err2)
+	return name + " " + vendor, errJoin(err, err2)
 }
 
 // Name device info - name
@@ -96,41 +106,17 @@ func (d *Device) AddProgram(source string) (*Program, error) {
 	if err != nil {
 		panic(err)
 	}
-	ret = pure.BuildProgram(p, 1, []pure.Device{d.id}, []byte(""), nil, nil)
+	ret = pure.BuildProgram(p, 1, d.id, []byte(""), nil, nil)
 	if ret != constants.CL_SUCCESS {
 		if ret == constants.CL_BUILD_PROGRAM_FAILURE {
 			var n pure.Size
-			pure.GetProgramBuildInfo(p, d.id, constants.CL_PROGRAM_BUILD_LOG, 0, nil, &n)
+			pure.GetProgramBuildInfo(p, d.id[0], constants.CL_PROGRAM_BUILD_LOG, 0, nil, &n)
 			log := make([]byte, int(n))
-			pure.GetProgramBuildInfo(p, d.id, constants.CL_PROGRAM_BUILD_LOG, n, unsafe.Pointer(&log[0]), nil)
+			pure.GetProgramBuildInfo(p, d.id[0], constants.CL_PROGRAM_BUILD_LOG, n, unsafe.Pointer(&log[0]), nil)
 			return nil, errors.New(string(log))
 		}
 		return nil, pure.StatusToErr(ret)
 	}
 	d.programs = append(d.programs, p)
 	return &Program{program: p}, nil
-}
-
-func (d *Device) PlatformName() (string, error) {
-	return d.platform.GetName()
-}
-
-func (d *Device) PlatformProfile() (string, error) {
-	return d.platform.GetProfile()
-}
-
-func (d *Device) PlatformOpenCLCVersion() (string, error) {
-	return d.platform.GetVersion()
-}
-
-func (d *Device) PlatformDriverVersion() (string, error) {
-	return d.platform.GetVersion()
-}
-
-func (d *Device) PlatformVendor() (string, error) {
-	return d.platform.GetVendor()
-}
-
-func (d *Device) PlatformExtensions() ([]pure.Extension, error) {
-	return d.platform.GetExtensions()
 }

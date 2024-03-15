@@ -28,12 +28,6 @@ func TestGetDevices(t *testing.T) {
 		t.Log(d.DriverVersion())
 		t.Log(d.Extensions())
 		t.Log(d.Vendor())
-		t.Log(d.PlatformName())
-		t.Log(d.PlatformProfile())
-		t.Log(d.PlatformOpenCLCVersion())
-		t.Log(d.PlatformDriverVersion())
-		t.Log(d.PlatformExtensions())
-		t.Log(d.PlatformVendor())
 		err = d.Release()
 		if err != nil {
 			t.Fatal(err)
@@ -408,7 +402,7 @@ func invertGPU(d *Device, kernel *Kernel, img *Image) (image.Image, error) {
 }
 
 func BenchmarkInvertCPU(b *testing.B) {
-	imgFile, err := os.Open("/home/micro/Downloads/wallpaper.png")
+	imgFile, err := os.Open("test_data/opencl.jpg")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -439,7 +433,7 @@ func BenchmarkInvertGPU(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	imgFile, err := os.Open("/home/micro/Downloads/wallpaper.png")
+	imgFile, err := os.Open("test_data/opencl.jpg")
 	if err != nil {
 		b.Fatal(err)
 	}
