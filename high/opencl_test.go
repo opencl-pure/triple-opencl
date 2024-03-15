@@ -1,6 +1,7 @@
 package high
 
 import (
+	"errors"
 	"fmt"
 	"github.com/opencl-pure/triple-opencl/constants"
 	"github.com/opencl-pure/triple-opencl/pure"
@@ -94,7 +95,7 @@ func TestVector(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer d.Release()
-	v, err := NewVector(d, []float32{0, 1, 2, 3, 0, 5, 6, 7, 8, 9, 0, 1, 12, 13, 4, 15})
+	v, err := d.NewVector([]float32{0, 1, 2, 3, 0, 5, 6, 7, 8, 9, 0, 1, 12, 13, 4, 15})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,15 +104,27 @@ func TestVector(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	dataBad := []float64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	err = <-v.Copy(dataBad)
+	if err == nil {
+		t.Fatal(errors.New("bad copy"))
+	}
 	retrievedData, err := v.Data()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(retrievedData) != len(data) {
+	if retrievedData.Len() != len(data) {
 		t.Fatal("data not same length")
 	}
 	for i := 0; i < 16; i++ {
-		if data[i] != retrievedData[i] {
+		if data[i] != float32(retrievedData.Index(i).Float()) {
+			t.Fatal("retrieved data not equal to sended data")
+		}
+	}
+	retData, err := v.DataArray()
+	arrayData := *(retData.Interface().(*[16]float32))
+	for i := 0; i < 16; i++ {
+		if data[i] != arrayData[i] {
 			t.Fatal("retrieved data not equal to sended data")
 		}
 	}
@@ -196,7 +209,7 @@ func TestKernel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v, err := NewVector(d, []float32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
+	v, err := d.NewVector([]float32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +228,7 @@ func TestKernel(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := 0; i < 16; i++ {
-		if data[i]+1 != receivedData[i] {
+		if data[i]+1 != float32(receivedData.Index(i).Float()) {
 			t.Error("receivedData not equal to data")
 		}
 	}
@@ -228,7 +241,7 @@ func TestKernel(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := 0; i < 16; i++ {
-		if data[i]+2 != receivedData[i] {
+		if data[i]+2 != float32(receivedData.Index(i).Float()) {
 			t.Error("receivedData not equal to data")
 		}
 	}

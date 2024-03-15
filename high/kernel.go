@@ -141,7 +141,7 @@ func (k *Kernel) setArg(index int, arg interface{}) error {
 		return k.setArgUnsafe(index, int(unsafe.Sizeof(val)), unsafe.Pointer(&val))
 	case *Bytes:
 		return k.setArgBuffer(index, val.buf)
-	case *Vector[any]:
+	case *Vector:
 		return k.setArgBuffer(index, val.buf)
 	case *Image:
 		return k.setArgBuffer(index, val.buf)
