@@ -41,9 +41,6 @@ func NewKernelArg(arg interface{}) (*KernelArg, error) {
 		return nil, errors.New("Unsuported arg")
 	}
 }
-func newKernelArgBuffer(b *Buffer) *KernelArg {
-	return &KernelArg{KA: pure.NewKernelArg[pure.Buffer](&b.B)}
-}
 
 func (k *Kernel) SetArg(index uint, arg *KernelArg) error {
 	return k.K.SetArg(index, arg.KA)

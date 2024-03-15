@@ -28,6 +28,12 @@ func TestGetDevices(t *testing.T) {
 		t.Log(d.DriverVersion())
 		t.Log(d.Extensions())
 		t.Log(d.Vendor())
+		t.Log(d.PlatformName())
+		t.Log(d.PlatformProfile())
+		t.Log(d.PlatformOpenCLCVersion())
+		t.Log(d.PlatformDriverVersion())
+		t.Log(d.PlatformExtensions())
+		t.Log(d.PlatformVendor())
 		err = d.Release()
 		if err != nil {
 			t.Fatal(err)

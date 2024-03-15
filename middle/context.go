@@ -44,9 +44,6 @@ type Context struct {
 func (d *Device) CreateContext(properties *ContextProperties) (*Context, error) {
 	var st pure.Status
 	flattened := properties.compile()
-	if pure.CreateContext == nil {
-		return nil, pure.Uninitialized("CreateContext")
-	}
 	ctx := pure.CreateContext(unsafe.Pointer(&flattened[0]), 1, []pure.Device{d.D}, nil, nil, &st)
 	if st != constants.CL_SUCCESS {
 		return nil, pure.StatusToErr(st)
@@ -56,27 +53,20 @@ func (d *Device) CreateContext(properties *ContextProperties) (*Context, error) 
 
 func (c *Context) CreateCommandQueue(device *Device) (*CommandQueue, error) {
 	var st pure.Status
-	if pure.CreateCommandQueue == nil {
-		return nil, pure.Uninitialized("CreateCommandQueue")
-	}
 	queue := pure.CreateCommandQueue(c.C, device.D, 0, &st)
 	if st != constants.CL_SUCCESS {
 		return nil, pure.StatusToErr(st)
 	}
-
 	return &CommandQueue{C: queue}, nil
 }
 
-type CommandQueueProperty uint32
+type CommandQueueProperty pure.CommandQueueProperty
 
 func (c *Context) CreateCommandQueueWithProperties(device Device, properties []pure.CommandQueueProperty) (*CommandQueue, error) {
 	var st pure.Status
 	property := pure.CommandQueueProperty(0)
 	for _, p := range properties {
 		property |= p
-	}
-	if pure.CreateCommandQueueWithProperties == nil {
-		return nil, pure.Uninitialized("CreateCommandQueueWithProperties")
 	}
 	queue := pure.CreateCommandQueueWithProperties(c.C, device.D, property, &st)
 	if st != constants.CL_SUCCESS {
@@ -86,24 +76,15 @@ func (c *Context) CreateCommandQueueWithProperties(device Device, properties []p
 }
 
 func (c *Context) Release() error {
-	if pure.ReleaseContext == nil {
-		return pure.Uninitialized("ReleaseContext")
-	}
 	return pure.StatusToErr(pure.ReleaseContext(c.C))
 }
 
 func (c *Context) CreateProgram(source string) (*Program, error) {
 	var st pure.Status
-	if pure.CreateProgramWithSource == nil {
-		return nil, pure.Uninitialized("CreateProgramWithSource")
-	}
-	program := pure.CreateProgramWithSource(
-		c.C, 1, []string{source}, []pure.Size{pure.Size(len(source))}, &st,
-	)
+	program := pure.CreateProgramWithSource(c.C, 1, []string{source}, []pure.Size{pure.Size(len(source))}, &st)
 	if st != constants.CL_SUCCESS {
 		return nil, pure.StatusToErr(st)
 	}
-
 	return &Program{program}, nil
 }
 
@@ -112,9 +93,6 @@ func (c Context) CreateBuffer(flags []pure.MemFlag, size uint) (*Buffer, error) 
 	memFlags := pure.MemFlag(0)
 	for _, f := range flags {
 		memFlags |= f
-	}
-	if pure.CreateBuffer == nil {
-		return nil, pure.Uninitialized("CreateBuffer")
 	}
 	buffer := pure.CreateBuffer(c.C, memFlags, pure.Size(size), nil, &st)
 	if st != constants.CL_SUCCESS {
@@ -130,9 +108,6 @@ func (c Context) CreateImage2D(flags []pure.MemFlag, format pure.ImageFormat, wi
 		memFlags |= f
 	}
 	w, h := pure.Size(width), pure.Size(height)
-	if pure.CreateImage2D == nil {
-		return nil, pure.Uninitialized("CreateImage2D")
-	}
 	buffer := pure.CreateImage2D(c.C, memFlags, &format, w, h, 0, nil, &st)
 	if st != constants.CL_SUCCESS {
 		return nil, pure.StatusToErr(st)
@@ -147,9 +122,6 @@ func (c *Context) CreateFromGLTexture(flags []pure.MemFlag, target pure.GLEnum, 
 	memFlags := pure.MemFlag(0)
 	for _, f := range flags {
 		memFlags |= f
-	}
-	if pure.CreateFromGLTexture == nil {
-		return nil, pure.Uninitialized("CreateFromGLTexture")
 	}
 	buffer := pure.CreateFromGLTexture(c.C, memFlags, target, 0, texture, &st)
 	if st != constants.CL_SUCCESS {
