@@ -48,30 +48,30 @@ func loadLibrary() (uintptr, error) {
 	for i := 0; i < len(paths); i++ {
 		libOpenCl, err := purego.Dlopen(paths[i], purego.RTLD_NOW|purego.RTLD_GLOBAL)
 		if err == nil {
-			return libOpenCl, initSomeSyscall(libOpenCl)
+			return libOpenCl, nil
 		}
 	}
 	return 0, errors.New("no path has passed")
 }
 
-func initSomeSyscall(handle uintptr) error {
+func initUnsupported(handle uintptr, errIn error) error {
 	readImg, err := purego.Dlsym(handle, "clEnqueueReadImage")
 	if err != nil {
-		return err
+		errIn = err
 	}
 	mapImg, err := purego.Dlsym(handle, "clEnqueueMapImage")
 	if err != nil {
-		return err
+		errIn = errors.Join(errIn, err)
 	}
 	mapBuffer, err := purego.Dlsym(handle, "clEnqueueMapBuffer")
 	if err != nil {
-		return err
+		errIn = errors.Join(errIn, err)
 	}
 	writeImg, err := purego.Dlsym(handle, "clEnqueueWriteImage")
 	if err != nil {
-		return err
+		errIn = errors.Join(errIn, err)
 	}
-
+	// Note: Functions with unsupported arguments requiring syscall loading
 	EnqueueReadImage = func(queue CommandQueue, image Buffer, blockingRead bool, origin, region [3]Size, row_pitch, slice_pitch Size, ptr unsafe.Pointer, numEventsWaitList uint, eventWaitList []Event, event *Event) Status {
 		block := uintptr(0)
 		if blockingRead {
@@ -154,6 +154,5 @@ func initSomeSyscall(handle uintptr) error {
 		)
 		return Status(r1)
 	}
-
-	return nil
+	return errIn
 }

@@ -3,6 +3,7 @@
 package pure
 
 import (
+	"errors"
 	"syscall"
 	"unsafe"
 )
@@ -12,17 +13,33 @@ func loadLibrary() (uintptr, error) {
 	if err != nil {
 		return 0, err
 	}
+	return uintptr(handle), err
+}
 
+func initUnsupported(handle syscall.Handle, errIn error) error {
 	// purego unsupported functions
 	dll := syscall.DLL{
 		Name:   "opencl.dll",
 		Handle: handle,
 	}
-	// Note: Functions with too many arguments requiring manual loading
-	readImg := dll.MustFindProc("clEnqueueReadImage")
-	mapImg := dll.MustFindProc("clEnqueueMapImage")
-	mapBuffer := dll.MustFindProc("clEnqueueMapBuffer")
-	writeImg := dll.MustFindProc("clEnqueueWriteImage")
+
+	// Note: Functions with unsupported arguments requiring syscall loading
+	readImg, err := dll.FindProc("clEnqueueReadImage")
+	if err != nil {
+		errIn = errors.Join(err)
+	}
+	mapImg, err := dll.FindProc("clEnqueueMapImage")
+	if err != nil {
+		errIn = errors.Join(err)
+	}
+	mapBuffer, err := dll.FindProc("clEnqueueMapBuffer")
+	if err != nil {
+		errIn = errors.Join(err)
+	}
+	writeImg, err := dll.FindProc("clEnqueueWriteImage")
+	if err != nil {
+		errIn = errors.Join(err)
+	}
 	EnqueueReadImage = func(queue CommandQueue, image Buffer, blockingRead bool, origin, region [3]Size, row_pitch, slice_pitch Size, ptr unsafe.Pointer, numEventsWaitList uint, eventWaitList []Event, event *Event) Status {
 		block := uintptr(0)
 		if blockingRead {
@@ -105,5 +122,5 @@ func loadLibrary() (uintptr, error) {
 		)
 		return Status(r1)
 	}
-	return uintptr(handle), err
+	return errIn
 }

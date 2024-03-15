@@ -19,31 +19,21 @@ type Device struct {
 	programs []pure.Program // only one
 }
 
-func errJoin(e1, e2 error) error {
-	if e1 != nil && e2 != nil {
-		return errors.New(e1.Error() + "\n" + e2.Error())
-	}
-	if e1 != nil {
-		return e1
-	}
-	return e2
-}
-
 // Release releases the device
 func (d *Device) Release() error {
 	var result error
 	for _, p := range d.programs {
 		if err := pure.StatusToErr(pure.ReleaseProgram(p)); err != nil {
-			result = errJoin(result, err)
+			result = errors.Join(result, err)
 		}
 	}
 	if err := pure.StatusToErr(pure.ReleaseCommandQueue(d.queue)); err != nil {
-		result = errJoin(result, err)
+		result = errors.Join(result, err)
 	}
 	if err := pure.StatusToErr(pure.ReleaseContext(d.ctx)); err != nil {
-		result = errJoin(result, err)
+		result = errors.Join(result, err)
 	}
-	return errJoin(result, pure.StatusToErr(pure.ReleaseDevice(d.id[0])))
+	return errors.Join(result, pure.StatusToErr(pure.ReleaseDevice(d.id[0])))
 }
 
 func (d *Device) GetInfoString(param pure.DeviceInfo) (string, error) {
@@ -59,7 +49,7 @@ func (d *Device) GetInfoString(param pure.DeviceInfo) (string, error) {
 func (d *Device) String() (string, error) {
 	name, err := d.Name()
 	vendor, err2 := d.Vendor()
-	return name + " " + vendor, errJoin(err, err2)
+	return name + " " + vendor, errors.Join(err, err2)
 }
 
 // Name device info - name

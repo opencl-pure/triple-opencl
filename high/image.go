@@ -6,6 +6,7 @@ import (
 	"github.com/opencl-pure/triple-opencl/pure"
 	"image"
 	"log"
+	"runtime"
 	"unsafe"
 )
 
@@ -162,12 +163,14 @@ func (img *Image) copy(data []byte) <-chan error {
 		return ch
 	}
 	go func() {
+		list := []pure.Event{event}
 		defer func() {
 			if err2 := pure.StatusToErr(pure.ReleaseEvent(event)); err2 != nil {
 				log.Println(err2)
 			}
+			runtime.KeepAlive(list)
 		}()
-		ch <- pure.StatusToErr(pure.WaitForEvents(1, &event))
+		ch <- pure.StatusToErr(pure.WaitForEvents(1, list))
 	}()
 	return ch
 }
