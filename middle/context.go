@@ -101,18 +101,18 @@ func (c Context) CreateBuffer(flags []pure.MemFlag, size uint) (*Buffer, error) 
 	return &Buffer{B: buffer}, nil
 }
 
-func (c Context) CreateImage2D(flags []pure.MemFlag, format pure.ImageFormat, width, height int) (*Buffer, error) {
+func (c Context) CreateImage2D(flags []pure.MemFlag, format pure.ImageFormat, width, height, rowPitch int, data unsafe.Pointer) (*Image, error) {
 	var st pure.Status
 	memFlags := pure.MemFlag(0)
 	for _, f := range flags {
 		memFlags |= f
 	}
-	w, h := pure.Size(width), pure.Size(height)
-	buffer := pure.CreateImage2D(c.C, memFlags, &format, w, h, 0, nil, &st)
+	w, h, r := pure.Size(width), pure.Size(height), pure.Size(rowPitch)
+	buffer := pure.CreateImage2D(c.C, memFlags, &format, w, h, r, data, &st)
 	if st != constants.CL_SUCCESS {
 		return nil, pure.StatusToErr(st)
 	}
-	return &Buffer{B: buffer}, nil
+	return &Image{B: buffer}, nil
 }
 
 // GL

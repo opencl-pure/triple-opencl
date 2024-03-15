@@ -45,15 +45,22 @@ func (cq *CommandQueue) EnqueueReadBuffer(buffer *Buffer, blockingRead bool, dat
 	))
 }
 
-func (cq *CommandQueue) EnqueueReadImage(image Buffer, blockingRead bool, data *pure.ImageData) error {
+func (cq *CommandQueue) EnqueueReadImage(image *Image, blockingRead bool, data *pure.ImageData) error {
 	origin := [3]pure.Size{pure.Size(data.Origin[0]), pure.Size(data.Origin[1]), pure.Size(data.Origin[2])}
 	region := [3]pure.Size{pure.Size(data.Region[0]), pure.Size(data.Region[1]), pure.Size(data.Region[2])}
 	return pure.StatusToErr(pure.EnqueueReadImage(
 		cq.C, image.B, blockingRead, origin, region, 0, 0, data.Pointer, 0, nil, nil,
 	))
 }
+func (cq *CommandQueue) EnqueueWriteImage(image *Image, blockingRead bool, data *pure.ImageData) error {
+	origin := [3]pure.Size{pure.Size(data.Origin[0]), pure.Size(data.Origin[1]), pure.Size(data.Origin[2])}
+	region := [3]pure.Size{pure.Size(data.Region[0]), pure.Size(data.Region[1]), pure.Size(data.Region[2])}
+	return pure.StatusToErr(pure.EnqueueWriteImage(
+		cq.C, image.B, blockingRead, origin, region, 0, 0, data.Pointer, 0, nil, nil,
+	))
+}
 
-func (cq *CommandQueue) EnqueueWriteBuffer(buffer Buffer, blockingWrite bool, data *pure.BufferData) error {
+func (cq *CommandQueue) EnqueueWriteBuffer(buffer *Buffer, blockingWrite bool, data *pure.BufferData) error {
 	return pure.StatusToErr(pure.EnqueueWriteBuffer(
 		cq.C, buffer.B, blockingWrite, 0, pure.Size(data.DataSize), data.Pointer, 0, nil, nil,
 	))
