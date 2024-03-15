@@ -1,6 +1,5 @@
 package high
 
-import "C"
 import (
 	"errors"
 	"github.com/opencl-pure/triple-opencl/constants"
