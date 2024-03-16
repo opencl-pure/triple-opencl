@@ -1,6 +1,5 @@
 package high
 
-import "C"
 import (
 	"github.com/opencl-pure/triple-opencl/pure"
 	"unsafe"

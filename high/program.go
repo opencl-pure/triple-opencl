@@ -1,7 +1,6 @@
 // program
 package high
 
-import "C"
 import (
 	"github.com/opencl-pure/triple-opencl/constants"
 	"github.com/opencl-pure/triple-opencl/pure"
@@ -12,7 +11,7 @@ type Program struct {
 	program pure.Program
 }
 
-// Return the program binaries associated with program.
+// GetBinaries Return the program binaries associated with program.
 func (p *Program) GetBinaries() ([][]byte, error) {
 	var devices pure.Device
 	err := pure.StatusToErr(pure.GetProgramInfo(p.program, pure.ProgramBuildInfo(constants.CL_PROGRAM_NUM_DEVICES), pure.Size(4), unsafe.Pointer(&devices), nil))
