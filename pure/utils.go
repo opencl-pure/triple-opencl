@@ -39,11 +39,21 @@ func GetImageBufferData(img image.RGBA) *ImageData {
 func registerLibFuncWithoutPanic(fptr interface{}, handle uintptr, name string, error0 error) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
-			e = errors.Join(error0, errors.New(fmt.Sprint(r)))
+			e = ErrJoin(error0, errors.New(fmt.Sprint(r)))
 		} else {
 			e = error0
 		}
 	}()
 	purego.RegisterLibFunc(fptr, handle, name)
 	return
+}
+
+func ErrJoin(e1, e2 error) error {
+	if e1 != nil && e2 != nil {
+		return errors.New(e1.Error() + ";\n" + e2.Error())
+	}
+	if e1 != nil {
+		return e1
+	}
+	return e2
 }
