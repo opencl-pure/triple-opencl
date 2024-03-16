@@ -25,7 +25,7 @@ func (v *Vector) Release() error {
 }
 
 // NewVector want slice or array to create opencl vector in gpu
-// I highly recommend primitive types such as int, uint, float32, ...,
+// I highly recommend primitive types such as int, uint, float32, uint8, ...,
 // but you are free to experiment with GO structs, but you must keep in mind,
 // that is there no guarantee how OpenCL will pass them
 func (d *Device) NewVector(data interface{}) (*Vector, error) {
