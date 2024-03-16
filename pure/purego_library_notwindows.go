@@ -1,4 +1,4 @@
-//go:build darwin || freebsd || linux
+//go:build !windows && !wasm
 
 package pure
 
@@ -77,6 +77,10 @@ func initUnsupported(handle uintptr, errIn error) error {
 		if blockingRead {
 			block = 1
 		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
+		}
 		r1, _, _ := purego.SyscallN(readImg,
 			uintptr(queue),
 			uintptr(image),
@@ -87,7 +91,7 @@ func initUnsupported(handle uintptr, errIn error) error {
 			uintptr(slice_pitch),
 			uintptr(ptr),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 			0)
 		return Status(r1)
@@ -96,6 +100,10 @@ func initUnsupported(handle uintptr, errIn error) error {
 		block := uintptr(0)
 		if blockingMap {
 			block = 1
+		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
 		}
 		r1, _, _ := purego.SyscallN(mapImg,
 			uintptr(queue),
@@ -107,7 +115,7 @@ func initUnsupported(handle uintptr, errIn error) error {
 			uintptr(unsafe.Pointer(imageRowPitch)),
 			uintptr(unsafe.Pointer(imageSlicePitch)),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 			uintptr(unsafe.Pointer(errCodeRet)),
 		)
@@ -119,6 +127,10 @@ func initUnsupported(handle uintptr, errIn error) error {
 		if blockingMap {
 			block = 1
 		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
+		}
 		r1, _, _ := purego.SyscallN(mapBuffer,
 			uintptr(queue),
 			uintptr(buffer),
@@ -127,7 +139,7 @@ func initUnsupported(handle uintptr, errIn error) error {
 			uintptr(offset),
 			uintptr(size),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 			uintptr(unsafe.Pointer(errCodeRet)),
 		)
@@ -139,6 +151,10 @@ func initUnsupported(handle uintptr, errIn error) error {
 		if blockingRead {
 			block = 1
 		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
+		}
 		r1, _, _ := purego.SyscallN(writeImg,
 			uintptr(queue),
 			uintptr(image),
@@ -149,7 +165,7 @@ func initUnsupported(handle uintptr, errIn error) error {
 			uintptr(slice_pitch),
 			uintptr(ptr),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 		)
 		return Status(r1)

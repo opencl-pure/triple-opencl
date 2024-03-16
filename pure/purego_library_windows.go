@@ -45,6 +45,10 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 		if blockingRead {
 			block = 1
 		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
+		}
 		r1, _, _ := readImg.Call(
 			uintptr(queue),
 			uintptr(image),
@@ -55,7 +59,7 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 			uintptr(slice_pitch),
 			uintptr(ptr),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 		)
 		return Status(r1)
@@ -64,6 +68,10 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 		block := uintptr(0)
 		if blockingMap {
 			block = 1
+		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
 		}
 		r1, _, _ := mapImg.Call(
 			uintptr(queue),
@@ -75,7 +83,7 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 			uintptr(unsafe.Pointer(imageRowPitch)),
 			uintptr(unsafe.Pointer(imageSlicePitch)),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 			uintptr(unsafe.Pointer(errCodeRet)),
 		)
@@ -87,6 +95,10 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 		if blockingMap {
 			block = 1
 		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
+		}
 		r1, _, _ := mapBuffer.Call(
 			uintptr(queue),
 			uintptr(buffer),
@@ -95,7 +107,7 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 			uintptr(offset),
 			uintptr(size),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 			uintptr(unsafe.Pointer(errCodeRet)),
 		)
@@ -107,6 +119,10 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 		if blockingRead {
 			block = 1
 		}
+		eventList := uintptr(0)
+		if eventWaitList != nil {
+			eventList = uintptr(unsafe.Pointer(&eventWaitList[0]))
+		}
 		r1, _, _ := writeImg.Call(
 			uintptr(queue),
 			uintptr(image),
@@ -117,7 +133,7 @@ func initUnsupported(handle syscall.Handle, errIn error) error {
 			uintptr(slice_pitch),
 			uintptr(ptr),
 			uintptr(numEventsWaitList),
-			uintptr(0), // TODO: eventWaitList if non-nil
+			eventList,
 			uintptr(unsafe.Pointer(event)),
 		)
 		return Status(r1)
