@@ -107,7 +107,7 @@ type KernelCall struct {
 // Run calls the kernel on its device with specified global and local work sizes and arguments
 // It's a non-blocking call, so it can return an event object that you can wait on.
 // The caller is responsible to release the returned event when it's not used anymore.
-func (kc KernelCall) Run(returnEvent bool, waitEvents []*Event, args ...interface{}) (event *Event, err error) {
+func (kc KernelCall) Run(waitEvents []*Event, args ...interface{}) (event *Event, err error) {
 	err = kc.kernel.setArgs(args)
 	if err != nil {
 		return
@@ -115,13 +115,20 @@ func (kc KernelCall) Run(returnEvent bool, waitEvents []*Event, args ...interfac
 	return kc.kernel.call(kc.globalWorkOffsets, kc.globalWorkSizes, kc.localWorkSizes, waitEvents)
 }
 
-func releaseKernel(k *Kernel) {
-	pure.ReleaseKernel(k.k)
+func (k *Kernel) ReleaseKernel() error {
+	return pure.StatusToErr(pure.ReleaseKernel(k.k))
+}
+
+func (k *Kernel) Finish() error {
+	return pure.StatusToErr(pure.FinishCommandQueue(k.d.queue))
+}
+
+func (k *Kernel) Flush() error {
+	return pure.StatusToErr(pure.FlushCommandQueue(k.d.queue))
 }
 
 func newKernel(d *Device, k pure.Kernel) *Kernel {
 	kernel := &Kernel{d: d, k: k}
-	runtime.SetFinalizer(kernel, releaseKernel)
 	return kernel
 }
 

@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	_ "image/png"
+	"log"
 	"os"
 	"testing"
 )
@@ -29,6 +30,12 @@ func TestGetDevices(t *testing.T) {
 		t.Log(d.DriverVersion())
 		t.Log(d.Extensions())
 		t.Log(d.Vendor())
+		t.Log(d.PlatformName())
+		t.Log(d.PlatformProfile())
+		t.Log(d.PlatformOpenCLCVersion())
+		t.Log(d.PlatformDriverVersion())
+		t.Log(d.PlatformExtensions())
+		t.Log(d.PlatformVendor())
 		err = d.Release()
 		if err != nil {
 			t.Fatal(err)
@@ -95,17 +102,13 @@ func TestVector(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer d.Release()
-	v, err := d.NewVector([]float32{0, 1, 2, 3, 0, 5, 6, 7, 8, 9, 0, 1, 12, 13, 4, 15})
-	if err != nil {
-		t.Fatal(err)
-	}
 	data := []float32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
-	err = <-v.Copy(data)
+	v, err := d.NewVector(data)
 	if err != nil {
 		t.Fatal(err)
 	}
 	dataBad := []float64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
-	err = <-v.Copy(dataBad)
+	err = <-v.Reset(dataBad)
 	if err == nil {
 		t.Fatal(errors.New("bad copy"))
 	}
@@ -117,14 +120,35 @@ func TestVector(t *testing.T) {
 		t.Fatal("data not same length")
 	}
 	for i := 0; i < 16; i++ {
-		if data[i] != float32(retrievedData.Index(i).Float()) {
+		if data[i] != float32(retrievedData.Index(i).Float()) { // use direct reflect methods
 			t.Fatal("retrieved data not equal to sended data")
 		}
 	}
+	slice, ok := retrievedData.Interface().([]float32) // cast to slice
+	if !ok {
+		t.Fatal("error cast")
+	}
+	for i := 0; i < 16; i++ {
+		if data[i] != slice[i] {
+			t.Error("receivedData not equal to data")
+		}
+	}
 	retData, err := v.DataArray()
-	arrayData := *(retData.Interface().(*[16]float32))
+	arrayData := *(retData.Interface().(*[16]float32)) // cast to array
 	for i := 0; i < 16; i++ {
 		if data[i] != arrayData[i] {
+			t.Fatal("retrieved data not equal to sended data")
+		}
+	}
+	newData := []float32{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 0, 1, 2, 3, 4, 5}
+	err = <-v.Reset(newData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retData, err = v.DataArray()
+	arrayData = *(retData.Interface().(*[16]float32)) // cast to array
+	for i := 0; i < 16; i++ {
+		if newData[i] != arrayData[i] {
 			t.Fatal("retrieved data not equal to sended data")
 		}
 	}
@@ -204,22 +228,34 @@ func TestKernel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d.AddProgram(testKernel)
+	_, err = d.AddProgram(testKernel)
+	if err != nil {
+		log.Fatal(err)
+	}
 	k, err := d.Kernel("testKernel")
 	if err != nil {
 		t.Fatal(err)
 	}
-	v, err := d.NewVector([]float32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
+	defer k.ReleaseKernel()
+	data := []float32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	v, err := d.NewVector(data)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer v.Release()
-	data := []float32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
-	err = <-v.Copy(data)
+	event, err := k.Global(16).Local(1).Run(nil, v)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = k.Global(16).Local(1).Run(false, nil, v)
+	err = k.Flush()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = k.Finish()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = event.Release()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,16 +268,20 @@ func TestKernel(t *testing.T) {
 			t.Error("receivedData not equal to data")
 		}
 	}
-	_, err = v.Map(k, false, nil)
+	event, err = v.Map(k, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	_ = k.Flush()
+	_ = k.Finish()
+	_ = event.Release()
 	receivedData, err = v.Data()
 	if err != nil {
 		t.Fatal(err)
 	}
+	slice := receivedData.Interface().([]float32)
 	for i := 0; i < 16; i++ {
-		if data[i]+2 != float32(receivedData.Index(i).Float()) {
+		if data[i]+2 != slice[i] {
 			t.Error("receivedData not equal to data")
 		}
 	}
@@ -315,11 +355,18 @@ func TestImage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer k.ReleaseKernel()
 	invertedImg, err := d.NewImage2D(ImageTypeRGBA, img.Bounds())
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = k.Global(img.Bounds().Dx(), img.Bounds().Dy()).Local(1, 1).Run(false, nil, img, invertedImg)
+	event, err := k.Global(img.Bounds().Dx(), img.Bounds().Dy()).Local(1, 1).Run(nil, img, invertedImg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = k.Flush()
+	_ = k.Finish()
+	_ = event.Release()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,7 +383,13 @@ func TestImage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = k.Global(grayImg.Bounds().Dx(), grayImg.Bounds().Dy()).Local(1, 1).Run(false, nil, grayImg, invertedGrayImg)
+	event, err = k.Global(grayImg.Bounds().Dx(), grayImg.Bounds().Dy()).Local(1, 1).Run(nil, grayImg, invertedGrayImg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = k.Flush()
+	_ = k.Finish()
+	_ = event.Release()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -407,7 +460,10 @@ func invertGPU(d *Device, kernel *Kernel, img *Image) (image.Image, error) {
 		return nil, err
 	}
 	defer invertedImg.Release()
-	_, err = kernel.Global(img.Bounds().Dx(), img.Bounds().Dy()).Local(1, 1).Run(false, nil, img, invertedImg)
+	event, err := kernel.Global(img.Bounds().Dx(), img.Bounds().Dy()).Local(1, 1).Run(nil, img, invertedImg)
+	_ = kernel.Flush()
+	_ = kernel.Finish()
+	_ = event.Release()
 	if err != nil {
 		return nil, err
 	}
@@ -443,6 +499,7 @@ func BenchmarkInvertGPU(b *testing.B) {
 		b.Fatal(err)
 	}
 	k, err := d.Kernel("invert")
+	defer k.ReleaseKernel()
 	if err != nil {
 		b.Fatal(err)
 	}

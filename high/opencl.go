@@ -30,17 +30,17 @@ func GetDevices(deviceType pure.DeviceType) ([]*Device, error) {
 	var devices []*Device
 	for _, p := range platformIds {
 		var n uint32
-		err = pure.StatusToErr(pure.GetDeviceIDs(p, deviceType, 0, nil, &n))
+		err = pure.StatusToErr(pure.GetDeviceIDs(p.p, deviceType, 0, nil, &n))
 		if err != nil {
 			return nil, err
 		}
 		deviceIds := make([]pure.Device, int(n))
-		err = pure.StatusToErr(pure.GetDeviceIDs(p, deviceType, n, deviceIds, nil))
+		err = pure.StatusToErr(pure.GetDeviceIDs(p.p, deviceType, n, deviceIds, nil))
 		if err != nil {
 			return nil, err
 		}
 		for _, d := range deviceIds {
-			device, err := newDevice([]pure.Device{d})
+			device, err := newDevice([]pure.Device{d}, p)
 			if err != nil {
 				return nil, err
 			}
@@ -50,23 +50,8 @@ func GetDevices(deviceType pure.DeviceType) ([]*Device, error) {
 	return devices, nil
 }
 
-func getPlatforms() ([]pure.Platform, error) {
-	var n uint32
-	if err := pure.StatusToErr(pure.GetPlatformIDs(0, nil, &n)); err != nil {
-		return nil, err
-	}
-	if n == 0 {
-		return nil, errors.New("unknown error no available platform")
-	}
-	platformIds := make([]pure.Platform, int(n))
-	if err := pure.StatusToErr(pure.GetPlatformIDs(n, platformIds, nil)); err != nil {
-		return nil, err
-	}
-	return platformIds, nil
-}
-
-func newDevice(id []pure.Device) (*Device, error) {
-	d := &Device{id: id}
+func newDevice(id []pure.Device, p *Platform) (*Device, error) {
+	d := &Device{id: id, platform: p}
 	var ret pure.Status
 	d.ctx = pure.CreateContext(nil, 1, id, nil, nil, &ret)
 	err := pure.StatusToErr(ret)

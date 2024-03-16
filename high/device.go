@@ -17,6 +17,7 @@ type Device struct {
 	ctx      pure.Context
 	queue    pure.CommandQueue
 	programs []pure.Program // only one
+	platform *Platform
 }
 
 func errJoin(e1, e2 error) error {
@@ -95,6 +96,30 @@ func (d *Device) Version() (string, error) {
 // DriverVersion device info - driver version
 func (d *Device) DriverVersion() (string, error) {
 	return d.GetInfoString(constants.CL_DRIVER_VERSION)
+}
+
+func (d *Device) PlatformName() (string, error) {
+	return d.platform.GetName()
+}
+
+func (d *Device) PlatformProfile() (string, error) {
+	return d.platform.GetProfile()
+}
+
+func (d *Device) PlatformOpenCLCVersion() (string, error) {
+	return d.platform.GetVersion()
+}
+
+func (d *Device) PlatformDriverVersion() (string, error) {
+	return d.platform.GetVersion()
+}
+
+func (d *Device) PlatformVendor() (string, error) {
+	return d.platform.GetVendor()
+}
+
+func (d *Device) PlatformExtensions() ([]pure.Extension, error) {
+	return d.platform.GetExtensions()
 }
 
 // AddProgram copiles program source

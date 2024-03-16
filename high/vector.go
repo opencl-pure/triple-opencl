@@ -24,16 +24,17 @@ func (v *Vector) Release() error {
 	return v.buf.Release()
 }
 
-// NewVector want slice to create opencl vector in gpu
+// NewVector want slice or array to create opencl vector in gpu
 // I highly recommend primitive types such as int, uint, float32, ...,
 // but you are free to experiment with GO structs, but you must keep in mind,
 // that is there no guarantee how OpenCL will pass them
 func (d *Device) NewVector(data interface{}) (*Vector, error) {
 	dataType := reflect.TypeOf(data)
-	if dataType.Kind() != reflect.Slice {
+	if dataType.Kind() != reflect.Slice && dataType.Kind() != reflect.Array {
 		return nil, errors.New("data must be slice")
 	}
-	sliceLen := reflect.ValueOf(data).Len()
+	slice := reflect.ValueOf(data)
+	sliceLen := slice.Len()
 	if sliceLen == 0 {
 		return nil, errors.New("slice must have at least 1 item")
 	}
@@ -43,12 +44,19 @@ func (d *Device) NewVector(data interface{}) (*Vector, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Vector{buf: buf, iSize: iSize, len: sliceLen, typ: dataType}, nil
+	v := &Vector{buf: buf, iSize: iSize, len: sliceLen, typ: dataType}
+	err = <-v.buf.copy(size, unsafe.Pointer(slice.Pointer()))
+	if err != nil {
+		_ = v.Release()
+		return nil, err
+	}
+	return v, nil
 }
 
-// Copy copies the float32 data from host data to device buffer
+// Reset want equal data as NewVector was given (slice or array), it must have equal length as vector
+// it is usefully for recall kernel with others data without locate new vector
 // it's a non-blocking call, channel will return an error or nil if the data transfer is complete
-func (v *Vector) Copy(data interface{}) <-chan error {
+func (v *Vector) Reset(data interface{}) <-chan error {
 	dataType := reflect.TypeOf(data)
 	if dataType != v.typ {
 		ch := make(chan error, 1)
@@ -108,6 +116,8 @@ func (v *Vector) DataArray() (*reflect.Value, error) {
 }
 
 // Map applies an map kernel on all elements of the vector
-func (v *Vector) Map(k *Kernel, returnEvent bool, waitEvents []*Event) (*Event, error) {
-	return k.Global(v.Length()).Local(1).Run(returnEvent, waitEvents, v)
+// It's a non-blocking call, so it can return an event object that you can wait on.
+// The caller is responsible to release the returned event when it's not used anymore.
+func (v *Vector) Map(k *Kernel, waitEvents []*Event) (*Event, error) {
+	return k.Global(v.Length()).Local(1).Run(waitEvents, v)
 }

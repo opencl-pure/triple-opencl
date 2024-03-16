@@ -57,6 +57,8 @@ func (b *Bytes) Data() ([]byte, error) {
 }
 
 // Map applies an map kernel on all elements of the buffer
-func (b *Bytes) Map(k *Kernel, returnEvent bool, waitEvents []*Event) (*Event, error) {
-	return k.Global(int(b.buf.size)).Local(1).Run(returnEvent, waitEvents, b)
+// It's a non-blocking call, so it can return an event object that you can wait on.
+// The caller is responsible to release the returned event when it's not used anymore.
+func (b *Bytes) Map(k *Kernel, waitEvents []*Event) (*Event, error) {
+	return k.Global(int(b.buf.size)).Local(1).Run(waitEvents, b)
 }
