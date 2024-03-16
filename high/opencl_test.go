@@ -228,7 +228,7 @@ func TestKernel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = d.AddProgram(testKernel)
+	_, err = d.AddProgram(fmt.Sprintf(testKernel))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -347,7 +347,7 @@ func TestImage(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer img.Release()
-	_, err = d.AddProgram(invertColorKernel)
+	_, err = d.AddProgram(fmt.Sprintf(invertColorKernel))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -494,7 +494,7 @@ func BenchmarkInvertGPU(b *testing.B) {
 		b.Fatal(err)
 	}
 	defer d.Release()
-	_, err = d.AddProgram(invertColorKernel)
+	_, err = d.AddProgram(fmt.Sprint(invertColorKernel))
 	if err != nil {
 		b.Fatal(err)
 	}

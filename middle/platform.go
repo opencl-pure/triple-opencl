@@ -1,8 +1,8 @@
 package middle
 
 import (
-	"github.com/opencl-pure/triple-opencl/v1/constants"
-	"github.com/opencl-pure/triple-opencl/v1/pure"
+	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/pure"
 	"strings"
 )
 
