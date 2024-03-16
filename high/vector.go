@@ -2,7 +2,7 @@ package high
 
 import (
 	"errors"
-	"github.com/opencl-pure/triple-opencl/pure"
+	"github.com/opencl-pure/triple-opencl/v1/pure"
 	"reflect"
 	"unsafe"
 )

@@ -3,8 +3,8 @@ package high
 import (
 	"errors"
 	"fmt"
-	"github.com/opencl-pure/triple-opencl/constants"
-	"github.com/opencl-pure/triple-opencl/pure"
+	"github.com/opencl-pure/triple-opencl/v1/constants"
+	"github.com/opencl-pure/triple-opencl/v1/pure"
 	"runtime"
 	"unsafe"
 )

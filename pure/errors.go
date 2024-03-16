@@ -3,7 +3,7 @@ package pure
 import (
 	"errors"
 	"fmt"
-	"github.com/opencl-pure/triple-opencl/constants"
+	"github.com/opencl-pure/triple-opencl/v1/constants"
 )
 
 func StatusToErr(code Status) error {
