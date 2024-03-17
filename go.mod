@@ -1,4 +1,4 @@
-module github.com/opencl-pure/triple-opencl
+module triple-opencl
 
 go 1.20
 
